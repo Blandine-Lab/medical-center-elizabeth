@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration Medical Center Elizabeth</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f7fc; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: auto; background: white; border-radius: 24px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        h1 { color: #0b6e8f; border-left: 5px solid #2ec4b6; padding-left: 20px; margin-top: 0; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+        .tab { padding: 10px 20px; cursor: pointer; background: #e9ecef; border-radius: 8px 8px 0 0; transition: 0.2s; }
+        .tab.active { background: #0b6e8f; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #0b6e8f; color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        button { background: none; border: none; cursor: pointer; font-size: 1.2rem; margin: 0 4px; }
+        .btn-edit { color: #ffc107; }
+        .btn-delete { color: #dc3545; }
+        .reminder-sent { background: #28a745; color: white; border-radius: 20px; padding: 4px 8px; display: inline-block; font-size: 0.7rem; }
+        .reminder-pending { background: #dc3545; color: white; border-radius: 20px; padding: 4px 8px; display: inline-block; font-size: 0.7rem; }
+        .footer { margin-top: 20px; text-align: center; color: #6c757d; }
+        .stats-card { display: inline-block; background: #e9ecef; border-radius: 16px; padding: 16px; margin: 10px; text-align: center; min-width: 150px; }
+        .stats-number { font-size: 2rem; font-weight: bold; color: #0b6e8f; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 20px; }
+        .calendar-day { border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa; }
+        .calendar-date { font-weight: bold; background: #0b6e8f; color: white; padding: 6px; border-radius: 6px; margin-bottom: 10px; text-align: center; }
+        .slot-item { font-size: 0.85rem; margin: 5px 0; display: flex; justify-content: space-between; }
+        .available { color: green; }
+        .booked { color: red; text-decoration: line-through; }
+        form { background: #f1f9fe; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        form label { display: inline-block; width: 100px; font-weight: bold; margin: 8px 0; }
+        form select, form input, form textarea, form button { padding: 8px; margin: 4px; border-radius: 8px; border: 1px solid #ccc; width: 250px; }
+        #contentEditor textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: monospace;
+        }
+        .preview-img { max-width: 100px; max-height: 100px; margin-top: 8px; border-radius: 8px; }
+        @media (max-width: 768px) { td, th { font-size: 12px; padding: 6px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+<div style="margin-bottom: 20px; background: #e9ecef; padding: 10px; border-radius: 12px;">
+    <button onclick="goToFooter()" style="background:#0b6e8f; color:white; border:none; padding:8px 16px; border-radius:25px; cursor:pointer;">✏️ Modifier le Footer (accès direct)</button>
+</div>
+
+<script>
+function goToFooter() {
+    // Créer ou afficher le formulaire footer directement
+    const container = document.querySelector('.container');
+    const existingForm = document.getElementById('directFooterForm');
+    if (existingForm) {
+        existingForm.scrollIntoView({ behavior: 'smooth' });
+        return;
+    }
+    
+    const formHtml = `
+        <div id="directFooterForm" style="background:white; border-radius:16px; padding:20px; margin:20px 0; border:2px solid #0b6e8f;">
+            <h2 style="color:#0b6e8f;">✏️ Édition du pied de page</h2>
+            <form id="quickFooterForm">
+                <label>Nom de l’établissement :</label>
+                <input type="text" id="quick_footer_etablissement" style="width:100%; margin-bottom:10px;"><br>
+                <label>Adresse :</label>
+                <input type="text" id="quick_footer_adresse" style="width:100%; margin-bottom:10px;"><br>
+                <label>Téléphone :</label>
+                <input type="text" id="quick_footer_telephone" style="width:100%; margin-bottom:10px;"><br>
+                <label>Texte urgences :</label>
+                <input type="text" id="quick_footer_urgences" style="width:100%; margin-bottom:10px;"><br>
+                <label>Dernières technologies (une par ligne) :</label>
+                <textarea id="quick_footer_technologies" rows="4" style="width:100%; margin-bottom:10px;"></textarea>
+                <label>Liens utiles (format: texte|url, un par ligne) :</label>
+                <textarea id="quick_footer_liens" rows="4" style="width:100%; margin-bottom:10px;"></textarea>
+                <label>Copyright :</label>
+                <input type="text" id="quick_footer_copyright" style="width:100%; margin-bottom:10px;"><br>
+                <label>Réseaux sociaux (icônes FA séparées par des virgules) :</label>
+                <input type="text" id="quick_footer_reseaux" style="width:100%; margin-bottom:10px;"><br>
+                <button type="submit" style="background:#0b6e8f; color:white; border:none; padding:10px 20px; border-radius:25px;">💾 Enregistrer</button>
+                <div id="quickFooterFeedback" style="margin-top:10px;"></div>
+            </form>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', formHtml);
+    
+    // Charger les valeurs actuelles
+    fetch('/api/site-content/footer')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('quick_footer_etablissement').value = data.etablissement || '';
+            document.getElementById('quick_footer_adresse').value = data.adresse || '';
+            document.getElementById('quick_footer_telephone').value = data.telephone || '';
+            document.getElementById('quick_footer_urgences').value = data.urgences || '';
+            document.getElementById('quick_footer_technologies').value = data.technologies || '';
+            document.getElementById('quick_footer_liens').value = data.liens || '';
+            document.getElementById('quick_footer_copyright').value = data.copyright || '';
+            document.getElementById('quick_footer_reseaux').value = data.reseaux || '';
+        });
+    
+    document.getElementById('quickFooterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const updates = {
+            etablissement: document.getElementById('quick_footer_etablissement').value,
+            adresse: document.getElementById('quick_footer_adresse').value,
+            telephone: document.getElementById('quick_footer_telephone').value,
+            urgences: document.getElementById('quick_footer_urgences').value,
+            technologies: document.getElementById('quick_footer_technologies').value,
+            liens: document.getElementById('quick_footer_liens').value,
+            copyright: document.getElementById('quick_footer_copyright').value,
+            reseaux: document.getElementById('quick_footer_reseaux').value
+        };
+        const res = await fetch('/api/site-content/footer', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates)
+        });
+        const feedback = document.getElementById('quickFooterFeedback');
+        if (res.ok) {
+            feedback.innerHTML = '<span style="color:green;">✅ Footer mis à jour !</span>';
+            setTimeout(() => feedback.innerHTML = '', 3000);
+        } else {
+            feedback.innerHTML = '<span style="color:red;">❌ Erreur lors de la mise à jour</span>';
+        }
+    });
+}
+</script>
+    <h1>📋 Administration Medical Center Elizabeth</h1>
+    <div class="tabs">
+        <div class="tab active" data-tab="rdv">Rendez-vous</div>
+        <div class="tab" data-tab="calendar">Calendrier</div>
+        <div class="tab" data-tab="applications">📋 Candidatures</div>
+        <div class="tab" data-tab="stats">Statistiques</div>
+        <div class="tab" data-tab="jobs">💼 Offres d'emploi</div>
+        <div class="tab" data-tab="manage">Disponibilités</div>
+        <div class="tab" data-tab="doctors">Médecins</div>
+        <div class="tab" data-tab="events">Événements</div>
+        <div class="tab" data-tab="content">Contenu du site</div>
+        <div class="tab" data-tab="actualites">Actualités</div>
+        <div class="tab" data-tab="specialties">Spécialités</div>
+        <div class="tab" data-tab="etablissement">🏥 Notre établissement</div>
+        <div class="tab" data-tab="partenaires">🤝 Nos partenaires</div>
+        <div class="tab" data-tab="newsletter">📧 Newsletter</div>
+        <div class="tab" data-tab="footer">📞 Footer & mentions</div>
+        <div class="tab" data-tab="tarifs">💰 Tarifs</div>
+        <div class="tab" data-tab="caisse">💰 Caisse</div>
+        <div class="tab" data-tab="results">🔬 Résultats labo</div>
+        <div class="tab" data-tab="patients">👥 Patients</div>
+    </div>
+
+    <!-- ========== CANDIDATURES ========== -->
+    <div id="tab-applications" class="tab-content">
+        <h2>📋 Candidatures reçues</h2>
+        <div style="overflow-x: auto;">
+            <table id="applicationsTable" style="width:100%; border-collapse: collapse;">
+                <thead><tr><th>ID</th><th>Poste</th><th>Candidat</th><th>Email</th><th>Téléphone</th><th>Message</th><th>CV</th><th>Date</th><th>Statut</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========== OFFRES D'EMPLOI ========== -->
+    <div id="tab-jobs" class="tab-content">
+        <h2>💼 Gestion des offres d'emploi</h2>
+        <form id="addJobForm">
+            <input type="text" id="jobTitle" placeholder="Titre du poste *" required style="width:100%; margin-bottom:8px;">
+            <input type="text" id="jobDepartment" placeholder="Département / Service *" required style="width:100%; margin-bottom:8px;">
+            <select id="jobContract" required style="width:100%; margin-bottom:8px;">
+                <option value="">Type de contrat *</option>
+                <option value="CDI">CDI</option><option value="CDD">CDD</option><option value="Stage">Stage</option><option value="Alternance">Alternance</option><option value="Freelance">Freelance</option>
+            </select>
+            <input type="text" id="jobLocation" placeholder="Localisation (ex: Paris)" required style="width:100%; margin-bottom:8px;">
+            <textarea id="jobDesc" placeholder="Description du poste *" rows="4" required style="width:100%; margin-bottom:8px;"></textarea>
+            <textarea id="jobRequirements" placeholder="Pré-requis / compétences *" rows="4" required style="width:100%; margin-bottom:8px;"></textarea>
+            <input type="text" id="jobSalary" placeholder="Salaire (ex: 35k€ - 45k€)" style="width:100%; margin-bottom:8px;">
+            <input type="date" id="jobDeadline" style="width:100%; margin-bottom:8px;">
+            <label><input type="checkbox" id="jobActive" checked> Offre active</label><br>
+            <button type="submit">➕ Ajouter une offre</button>
+        </form>
+        <hr>
+        <h3>📋 Liste des offres</h3>
+        <table id="jobsTable">
+            <thead><tr><th>ID</th><th>Titre</th><th>Département</th><th>Contrat</th><th>Localisation</th><th>Actif</th><th>Actions</th><tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- ========== TARIFS ========== -->
+    <div id="tab-tarifs" class="tab-content">
+        <h2>💰 Gestion des tarifs hospitaliers</h2>
+        <form id="addTarifForm">
+            <input type="text" id="tarifService" placeholder="Service (ex: Consultations)" required style="width:100%; margin-bottom:8px;">
+            <input type="text" id="tarifPrestation" placeholder="Prestation (ex: Consultation générale)" required style="width:100%; margin-bottom:8px;">
+            <input type="text" id="tarifPrix" placeholder="Prix (ex: 50€ ou 50-80€)" required style="width:100%; margin-bottom:8px;">
+            <textarea id="tarifDesc" placeholder="Description (optionnelle)" rows="2" style="width:100%; margin-bottom:8px;"></textarea>
+            <input type="number" id="tarifOrdre" placeholder="Ordre d'affichage" value="0" style="width:100%; margin-bottom:8px;">
+            <label><input type="checkbox" id="tarifActive" checked> Actif</label><br>
+            <button type="submit">➕ Ajouter un tarif</button>
+        </form>
+        <hr>
+        <h3>📋 Liste des tarifs</h3>
+        <table id="tarifsTable">
+            <thead><tr><th>ID</th><th>Service</th><th>Prestation</th><th>Prix</th><th>Ordre</th><th>Actif</th><th>Actions</th></table></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- ========== CAISSE (Paiements) ========== -->
+    <div id="tab-caisse" class="tab-content">
+        <h2>💰 Historique des paiements</h2>
+        <div style="overflow-x: auto;">
+            <table id="paiementsTable" style="width:100%; border-collapse: collapse;">
+                <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>Méthode</th><th>Statut</th><th>Code</th><th>Date</th><th>Facture</th></tr></thead>
+                <tbody></tbody>
+            </tr>
+        </div>
+        <hr>
+        <h3>⚙️ Configuration des moyens de paiement</h3>
+        <form id="configPaiementForm">
+            <label>IBAN :</label><input type="text" id="config_iban" style="width:100%; margin-bottom:10px;"><br>
+            <label>BIC :</label><input type="text" id="config_bic" style="width:100%; margin-bottom:10px;"><br>
+            <label>Titulaire du compte :</label><input type="text" id="config_titulaire" style="width:100%; margin-bottom:10px;"><br>
+            <label>Infos Mobile Money :</label><input type="text" id="config_mobile_money_info" style="width:100%; margin-bottom:10px;"><br>
+            <label>Infos Carte bancaire :</label><input type="text" id="config_carte_info" style="width:100%; margin-bottom:10px;"><br>
+            <button type="submit" class="btn-primary">💾 Enregistrer la configuration</button>
+            <div id="configFeedback" style="margin-top:10px;"></div>
+        </form>
+    </div>
+
+    <!-- Rendez-vous (avec colonnes admin_viewed / doctor_viewed) -->
+    <div id="tab-rdv" class="tab-content active">
+        <div style="overflow-x: auto;">
+            <table id="appointmentsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Nom</th><th>Email</th><th>Téléphone</th><th>Spécialité</th>
+                        <th>Médecin</th><th>Date</th><th>Créneau</th><th>Message</th>
+                        <th>Rappel</th><th>Créé le</th><th>Téléconsultation</th>
+                        <th>Vu Admin</th><th>Vu Médecin</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></td><td colspan="15">Chargement...‹/td›‹/tr›</tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Calendrier -->
+    <div id="tab-calendar" class="tab-content">
+        <div id="calendarContainer" class="calendar-grid">Chargement...</div>
+    </div>
+
+    <!-- Statistiques -->
+    <div id="tab-stats" class="tab-content">
+        <div id="statsContainer"></div>
+    </div>
+
+    <!-- ========== DISPONIBILITÉS (CORRIGÉ) ========== -->
+    <div id="tab-manage" class="tab-content">
+        <h3>➕ Ajouter un créneau</h3>
+        <form id="addAvailabilityForm">
+            <label>Médecin :</label><select id="docId" required></select><br>
+            <label>Date :</label><input type="date" id="availDate" required><br>
+            <label>Heure de début :</label><input type="time" id="startTime" required step="300"><br>
+            <label>Heure de fin :</label><input type="time" id="endTime" required step="300"><br>
+            <button type="submit">➕ Ajouter</button>
+            <div id="availFormFeedback" style="margin-top: 10px;"></div>
+        </form>
+        <hr>
+        <h3>📋 Liste des créneaux</h3>
+        <table id="availTable">
+            <thead><tr><th>ID</th><th>Médecin</th><th>Date</th><th>Créneau</th><th>Statut</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Gestion médecins (avec Telegram Chat ID) -->
+    <div id="tab-doctors" class="tab-content">
+        <h3>➕ Ajouter un médecin</h3>
+        <form id="addDoctorForm" enctype="multipart/form-data">
+            <input type="text" id="docName" placeholder="Nom complet *" required style="width:100%; margin-bottom:8px;">
+            <input type="text" id="docSpecialty" placeholder="Spécialité (ex: Cardiologie)" required style="width:100%; margin-bottom:8px;">
+            <input type="text" id="docDepartment" placeholder="Service (ex: Cardiologie)" required style="width:100%; margin-bottom:8px;">
+            <input type="email" id="docEmail" placeholder="Email *" required style="width:100%; margin-bottom:8px;">
+            <input type="text" id="docTelegramChatId" placeholder="Telegram Chat ID (optionnel)" style="width:100%; margin-bottom:8px;">
+            <div style="margin-bottom:8px;">
+                <label>Photo (fichier) :</label>
+                <input type="file" id="docPhoto" accept="image/jpeg,image/png,image/gif,image/webp">
+                <div id="photoPreview" style="margin-top:5px;"></div>
+                <small>Formats autorisés : JPG, PNG, GIF, WEBP – max 5 Mo</small>
+            </div>
+            <button type="submit" style="margin-top:10px;">➕ Ajouter le médecin</button>
+        </form>
+        <hr>
+        <h3>📋 Liste des médecins</h3>
+        <table id="doctorsTable">
+            <thead><tr><th>ID</th><th>Nom</th><th>Spécialité</th><th>Photo</th><th>Telegram ID</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Gestion événements -->
+    <div id="tab-events" class="tab-content">
+        <h3>➕ Ajouter un événement</h3>
+        <form id="addEventForm">
+            <input type="text" id="eventTitle" placeholder="Titre" required>
+            <textarea id="eventDesc" placeholder="Description" rows="2"></textarea>
+            <input type="date" id="eventStart" placeholder="Date début">
+            <input type="date" id="eventEnd" placeholder="Date fin">
+            <label><input type="checkbox" id="eventActive" checked> Actif</label>
+            <button type="submit">Ajouter</button>
+        </form>
+        <h3>📅 Événements</h3>
+        <table id="eventsTable">
+            <thead><tr><th>ID</th><th>Titre</th><th>Description</th><th>Début</th><th>Fin</th><th>Actif</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Contenu du site -->
+    <div id="tab-content" class="tab-content">
+        <select id="contentPageSelect" style="padding: 8px; margin-bottom: 20px; border-radius: 8px;">
+            <option value="home">Accueil</option>
+            <option value="about">Nous connaître</option>
+            <option value="support">Nous soutenir</option>
+            <option value="checkup">Check-up Center</option>
+            <option value="specialties">Nos spécialités</option>
+            <option value="info">Infos patients & visiteurs</option>
+            <option value="offre">Notre offre de soins</option>
+            <option value="tarifs">💰 Tarifs hospitaliers</option>
+            <option value="paiement_facture">🧾 Paiement des factures</option>
+        </select>
+        <div id="contentEditor"></div>
+        <button id="saveContentBtn" style="margin-top: 20px; background: #0b6e8f; color: white; border: none; padding: 10px 20px; border-radius: 2rem; cursor: pointer;">Enregistrer les modifications</button>
+    </div>
+
+    <!-- Actualités avec upload -->
+    <div id="tab-actualites" class="tab-content">
+        <h2>Gestion des actualités</h2>
+        <form id="addActuForm" enctype="multipart/form-data">
+            <input type="text" id="actuTitre" placeholder="Titre *" required style="width:100%; margin-bottom:8px;">
+            <textarea id="actuDesc" placeholder="Description *" rows="2" required style="width:100%; margin-bottom:8px;"></textarea>
+            <div style="margin-bottom:8px;">
+                <label>Image (fichier) :</label>
+                <input type="file" id="actuImageFile" accept="image/jpeg,image/png,image/gif,image/webp">
+                <div id="imagePreview" style="margin-top:5px;"></div>
+                <small>Formats : JPG, PNG, GIF, WEBP – max 5 Mo</small>
+            </div>
+            <input type="number" id="actuOrdre" placeholder="Ordre (1,2,3...)" value="0" style="width:100%; margin-bottom:8px;">
+            <label><input type="checkbox" id="actuActive" checked> Actif</label><br>
+            <button type="submit" style="margin-top:10px;">➕ Ajouter une actualité</button>
+        </form>
+        <hr>
+        <h3>Liste des actualités</h3>
+        <table id="actualitesTable">
+            <thead><tr><th>ID</th><th>Titre</th><th>Description</th><th>Image</th><th>Ordre</th><th>Actif</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Spécialités -->
+    <div id="tab-specialties" class="tab-content">
+        <h2>Gestion des spécialités</h2>
+        <form id="addSpecialtyForm">
+            <input type="text" id="specName" placeholder="Nom de la spécialité" required style="width:100%; margin-bottom:8px;"><br>
+            <textarea id="specDesc" placeholder="Description (optionnelle)" rows="2" style="width:100%; margin-bottom:8px;"></textarea><br>
+            <input type="number" id="specOrdre" placeholder="Ordre d'affichage" value="0" style="width:100%; margin-bottom:8px;"><br>
+            <label><input type="checkbox" id="specActive" checked> Active</label><br>
+            <button type="submit" style="margin-top:10px;">➕ Ajouter une spécialité</button>
+        </form>
+        <hr>
+        <h3>Liste des spécialités</h3>
+        <table id="specialtiesTable">
+            <thead><tr><th>ID</th><th>Nom</th><th>Description</th><th>Ordre</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Gestion des photos de l'établissement -->
+    <div id="tab-etablissement" class="tab-content">
+        <h2>🏥 Gestion des photos de l'établissement</h2>
+        <form id="addEtablissementForm" enctype="multipart/form-data">
+            <input type="text" id="etabTitre" placeholder="Titre (ex: Salle d'opération)" required style="width:100%; margin-bottom:8px;">
+            <textarea id="etabDesc" placeholder="Description (optionnelle)" rows="2" style="width:100%; margin-bottom:8px;"></textarea>
+            <div style="margin-bottom:8px;">
+                <label>Image :</label>
+                <input type="file" id="etabImageFile" accept="image/*">
+                <div id="etabPreview"></div>
+            </div>
+            <input type="number" id="etabOrdre" placeholder="Ordre (1,2,3...)" value="0" style="width:100%; margin-bottom:8px;">
+            <label><input type="checkbox" id="etabActive" checked> Actif</label><br>
+            <button type="submit">➕ Ajouter une photo</button>
+        </form>
+        <hr>
+        <h3>Liste des photos</h3>
+        <table id="etablissementTable"><thead><tr><th>ID</th><th>Titre</th><th>Image</th><th>Ordre</th><th>Actif</th><th>Actions</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <!-- Gestion des partenaires -->
+    <div id="tab-partenaires" class="tab-content">
+        <h2>🤝 Gestion des partenaires</h2>
+        <form id="addPartenaireForm" enctype="multipart/form-data">
+            <input type="text" id="partNom" placeholder="Nom du partenaire" required style="width:100%; margin-bottom:8px;">
+            <textarea id="partDesc" placeholder="Description (optionnelle)" rows="2" style="width:100%; margin-bottom:8px;"></textarea>
+            <div style="margin-bottom:8px;">
+                <label>Logo/Image :</label>
+                <input type="file" id="partImageFile" accept="image/*">
+                <div id="partPreview"></div>
+            </div>
+            <textarea id="partCommentaire" placeholder="Commentaire (affiché sous l'image)" rows="3" style="width:100%; margin-bottom:8px;"></textarea>
+            <input type="number" id="partOrdre" placeholder="Ordre" value="0" style="width:100%; margin-bottom:8px;">
+            <label><input type="checkbox" id="partActive" checked> Actif</label><br>
+            <button type="submit">➕ Ajouter un partenaire</button>
+        </form>
+        <hr>
+        <h3>Liste des partenaires</h3>
+        <table id="partenairesTable"><thead><tr><th>ID</th><th>Nom</th><th>Image</th><th>Commentaire</th><th>Ordre</th><th>Actif</th><th>Actions</th></td></thead><tbody></tbody></td>
+    </div>
+
+    <!-- ========== NEWSLETTER ========== -->
+    <div id="tab-newsletter" class="tab-content">
+        <h2>📧 Gestion de la newsletter</h2>
+        <div id="newsletterStats"></div>
+        <hr>
+        <h3>✉️ Envoyer une newsletter</h3>
+        <form id="newsletterSendForm">
+            <input type="text" id="newsSubject" placeholder="Sujet" required style="width:100%; margin-bottom:8px;">
+            <textarea id="newsContent" rows="5" placeholder="Contenu (HTML accepté)" required style="width:100%; margin-bottom:8px;"></textarea>
+            <div id="newsPreview" style="border:1px solid #ccc; padding:8px; margin-bottom:8px; background:#f9f9f9;"></div>
+            <button type="submit" id="sendNewsBtn">📨 Envoyer à tous les abonnés</button>
+            <div id="newsFeedback" style="margin-top:10px;"></div>
+        </form>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <div id="tab-footer" class="tab-content">
+        <h2>✏️ Gestion des informations du pied de page</h2>
+        <form id="footerForm">
+            <h3>Coordonnées</h3>
+            <label>Nom de l’établissement :</label><input type="text" id="footer_etablissement" style="width:100%; margin-bottom:10px;"><br>
+            <label>Adresse :</label><input type="text" id="footer_adresse" style="width:100%; margin-bottom:10px;"><br>
+            <label>Téléphone :</label><input type="text" id="footer_telephone" style="width:100%; margin-bottom:10px;"><br>
+            <label>Texte urgences :</label><input type="text" id="footer_urgences" style="width:100%; margin-bottom:10px;"><br>
+            <h3>Dernières technologies (une par ligne)</h3>
+            <textarea id="footer_technologies" rows="4" style="width:100%; margin-bottom:10px;"></textarea>
+            <h3>Liens utiles (une par ligne, format: texte|url)</h3>
+            <textarea id="footer_liens" rows="4" style="width:100%; margin-bottom:10px;"></textarea>
+            <small>Exemple : Espace patient sécurisé|/espace-patient.html</small><br>
+            <h3>Copyright</h3>
+            <input type="text" id="footer_copyright" style="width:100%; margin-bottom:10px;"><br>
+            <h3>Réseaux sociaux (icônes Font Awesome, séparés par des virgules)</h3>
+            <input type="text" id="footer_reseaux" placeholder="fab fa-twitter, fab fa-linkedin, fab fa-instagram" style="width:100%; margin-bottom:10px;"><br>
+            <button type="submit">💾 Enregistrer les modifications</button>
+            <div id="footerFeedback" style="margin-top:10px;"></div>
+        </form>
+    </div>
+
+    <!-- ========== RÉSULTATS LABORATOIRE ========== -->
+    <div id="tab-results" class="tab-content">
+        <h2>🔬 Résultats de laboratoire en attente de publication</h2>
+        <div style="overflow-x: auto;">
+            <table id="pendingResultsTable" style="width:100%; border-collapse: collapse;">
+                <thead><tr><th>ID</th><th>Patient</th><th>Email</th><th>Type</th><th>Description</th><th>Fichier</th><th>Date création</th><th>Action</th></td></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <hr>
+        <h2>➕ Ajouter un nouveau résultat</h2>
+        <form id="addResultForm" style="background: #f1f9fe; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <label>Patient :</label>
+            <select id="resultPatientId" required style="width:100%; margin-bottom:8px;">
+                <option value="">-- Choisir un patient --</option>
+            </select>
+            <input type="text" id="resultType" placeholder="Type d'examen (ex: Prise de sang, Radiographie)" required style="width:100%; margin-bottom:8px;">
+            <textarea id="resultDesc" placeholder="Description (optionnelle)" rows="2" style="width:100%; margin-bottom:8px;"></textarea>
+            <input type="text" id="resultFileUrl" placeholder="URL du fichier (ex: /uploads/resultats/analyse.pdf)" style="width:100%; margin-bottom:8px;">
+            <button type="submit" style="background: #0b6e8f; color:white; border:none; padding:10px 20px; border-radius:30px;">📤 Ajouter et mettre en attente</button>
+            <div id="addResultFeedback" style="margin-top:10px;"></div>
+        </form>
+    </div>
+    <!-- ========== FOOTER ========== -->
+<div id="tab-footer" class="tab-content">
+    <h2>✏️ Gestion des informations du pied de page</h2>
+    <form id="footerForm">
+        <h3>Coordonnées</h3>
+        <label>Nom de l’établissement :</label>
+        <input type="text" id="footer_etablissement" style="width:100%; margin-bottom:10px;"><br>
+        <label>Email :</label>
+        <input type="email" id="footer_email" style="width:100%; margin-bottom:10px;"><br>
+        <label>Adresse :</label>
+        <input type="text" id="footer_adresse" style="width:100%; margin-bottom:10px;"><br>
+        <label>Téléphone :</label>
+        <input type="text" id="footer_telephone" style="width:100%; margin-bottom:10px;"><br>
+        <label>Texte urgences :</label>
+        <input type="text" id="footer_urgences" style="width:100%; margin-bottom:10px;"><br>
+
+        <h3>Dernières technologies (une par ligne)</h3>
+        <textarea id="footer_technologies" rows="4" style="width:100%; margin-bottom:10px;"></textarea>
+
+        <h3>Liens utiles (une par ligne, format: texte|url)</h3>
+        <textarea id="footer_liens" rows="4" style="width:100%; margin-bottom:10px;"></textarea>
+        <small>Exemple : Espace patient sécurisé|/espace-patient.html</small><br>
+
+        <h3>Copyright</h3>
+        <input type="text" id="footer_copyright" style="width:100%; margin-bottom:10px;"><br>
+
+        <h3>Réseaux sociaux (icônes Font Awesome, séparés par des virgules)</h3>
+        <input type="text" id="footer_reseaux" placeholder="fab fa-twitter, fab fa-linkedin, fab fa-instagram" style="width:100%; margin-bottom:10px;"><br>
+
+        <button type="submit">💾 Enregistrer les modifications</button>
+        <div id="footerFeedback" style="margin-top:10px;"></div>
+    </form>
+</div>
+
+    <!-- ========== PATIENTS ========== -->
+    <div id="tab-patients" class="tab-content">
+        <h2>👥 Gestion des patients</h2>
+        <form id="addPatientForm">
+            <input type="text" id="patientFirstname" placeholder="Prénom *" required style="width:100%; margin-bottom:8px;">
+            <input type="text" id="patientLastname" placeholder="Nom *" required style="width:100%; margin-bottom:8px;">
+            <input type="email" id="patientEmail" placeholder="Email *" required style="width:100%; margin-bottom:8px;">
+            <input type="tel" id="patientPhone" placeholder="Téléphone (ex: +243...)" style="width:100%; margin-bottom:8px;">
+            <input type="password" id="patientPassword" placeholder="Mot de passe *" required style="width:100%; margin-bottom:8px;">
+            <button type="submit" style="background:#0b6e8f; color:white; border:none; padding:10px 20px; border-radius:30px;">➕ Ajouter un patient</button>
+        </form>
+        <hr>
+        <h3>📋 Liste des patients</h3>
+        <div style="overflow-x: auto;">
+            <table id="patientsTable">
+                <thead><tr><th>ID</th><th>Prénom</th><th>Nom</th><th>Email</th><th>Téléphone</th><th>Date d'inscription</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer"><p>🔒 Accès sécurisé réservé au personnel autorisé</p></div>
+</div>
+
+<script>
+    // ========== CANDIDATURES ==========
+    async function loadApplications() {
+        try {
+            const res = await fetch('/api/admin/applications');
+            const data = await res.json();
+            const tbody = document.querySelector('#applicationsTable tbody');
+            if (!tbody) return;
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9">Aucune candidature reçue‹/td›‹/tr›';
+                return;
+            }
+            tbody.innerHTML = data.map(app => `
+                <tr>
+                    <td>${app.id}</td>
+                    <td>${escapeHtml(app.job_title)}</td>
+                    <td>${escapeHtml(app.full_name)}</td>
+                    <td>${escapeHtml(app.email)}</td>
+                    <td>${escapeHtml(app.phone || '-')}</td>
+                    <td>${escapeHtml(app.message || '-')}</td>
+                    <td>${app.cv_url ? `<a href="${app.cv_url}" target="_blank">📄 Télécharger CV</a>` : '-'}</td>
+                    <td>${new Date(app.applied_date).toLocaleString()}</td>
+                    <td>${escapeHtml(app.status || 'pending')}</td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); document.querySelector('#applicationsTable tbody').innerHTML = '<tr><td colspan="9">Erreur de chargement‹/td›‹/tr›'; }
+    }
+
+    // ========== OFFRES D'EMPLOI ==========
+    async function loadJobs() {
+        const res = await fetch('/api/admin/jobs');
+        const data = await res.json();
+        const tbody = document.querySelector('#jobsTable tbody');
+        tbody.innerHTML = data.map(job => `
+            <tr>
+                <td>${job.id}</td>
+                <td>${escapeHtml(job.title)}</td>
+                <td>${escapeHtml(job.department)}</td>
+                <td>${escapeHtml(job.contract_type)}</td>
+                <td>${escapeHtml(job.location)}</td>
+                <td>${job.active ? '✅ Oui' : '❌ Non'}</td>
+                <td><button onclick="editJob(${job.id})" style="color:#ffc107;">✏️</button><button onclick="deleteJob(${job.id})" style="color:#dc3545;">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteJob(id) {
+        if (!confirm("Supprimer cette offre d'emploi ?")) return;
+        const res = await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' });
+        if (res.ok) loadJobs(); else alert("Erreur suppression");
+    }
+
+    function editJob(id) {
+        fetch(`/api/jobs/${id}`).then(res => res.json()).then(job => {
+            const newTitle = prompt("Titre :", job.title); if (!newTitle) return;
+            const newDepartment = prompt("Département :", job.department); if (!newDepartment) return;
+            const newContract = prompt("Type de contrat :", job.contract_type); if (!newContract) return;
+            const newLocation = prompt("Localisation :", job.location); if (!newLocation) return;
+            const newDesc = prompt("Description :", job.description); if (!newDesc) return;
+            const newRequirements = prompt("Pré-requis :", job.requirements); if (!newRequirements) return;
+            const newSalary = prompt("Salaire :", job.salary_range || "");
+            const newActive = confirm("Offre active ? (OK = oui, Annuler = non)");
+            fetch(`/api/admin/jobs/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: newTitle, department: newDepartment, contract_type: newContract,
+                    location: newLocation, description: newDesc, requirements: newRequirements,
+                    salary_range: newSalary, active: newActive ? 1 : 0
+                })
+            }).then(res => res.ok ? loadJobs() : alert("Erreur modification"));
+        });
+    }
+
+    document.getElementById('addJobForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('jobTitle').value;
+        const department = document.getElementById('jobDepartment').value;
+        const contract_type = document.getElementById('jobContract').value;
+        const location = document.getElementById('jobLocation').value;
+        const description = document.getElementById('jobDesc').value;
+        const requirements = document.getElementById('jobRequirements').value;
+        const salary_range = document.getElementById('jobSalary').value;
+        const active = document.getElementById('jobActive').checked ? 1 : 0;
+        const deadline = document.getElementById('jobDeadline').value;
+        const res = await fetch('/api/admin/jobs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, department, contract_type, location, description, requirements, salary_range, active, deadline })
+        });
+        if (res.ok) { alert("✅ Offre ajoutée"); loadJobs(); document.getElementById('addJobForm').reset(); }
+        else alert("Erreur");
+    });
+
+    // ========== Utilitaires ==========
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
+    // ========== TARIFS ==========
+    async function loadTarifs() {
+        const res = await fetch('/api/tarifs');
+        const data = await res.json();
+        const tbody = document.querySelector('#tarifsTable tbody');
+        tbody.innerHTML = data.map(t => `
+            <tr>
+                <td>${t.id}</td>
+                <td>${escapeHtml(t.service)}</td>
+                <td>${escapeHtml(t.prestation)}</td>
+                <td>${escapeHtml(t.prix)}</td>
+                <td>${t.ordre}</td>
+                <td>${t.active ? 'Oui' : 'Non'}</td>
+                <td><button onclick="editTarif(${t.id})" style="color:#ffc107;">✏️</button><button onclick="deleteTarif(${t.id})" style="color:#dc3545;">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteTarif(id) {
+        if (!confirm("Supprimer ce tarif ?")) return;
+        const res = await fetch(`/api/tarifs/${id}`, { method: 'DELETE' });
+        if (res.ok) loadTarifs(); else alert("Erreur suppression");
+    }
+
+    function editTarif(id) {
+        fetch(`/api/tarifs/${id}`).then(res => res.json()).then(tarif => {
+            const newService = prompt("Service :", tarif.service); if (!newService) return;
+            const newPrestation = prompt("Prestation :", tarif.prestation); if (!newPrestation) return;
+            const newPrix = prompt("Prix :", tarif.prix); if (!newPrix) return;
+            const newDesc = prompt("Description :", tarif.description || "");
+            const newOrdre = prompt("Ordre :", tarif.ordre);
+            const newActive = confirm("Actif ? (OK = oui, Annuler = non)");
+            fetch(`/api/tarifs/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    service: newService, prestation: newPrestation, prix: newPrix,
+                    description: newDesc, ordre: parseInt(newOrdre) || 0, active: newActive ? 1 : 0
+                })
+            }).then(res => res.ok ? loadTarifs() : alert("Erreur modification"));
+        });
+    }
+
+    document.getElementById('addTarifForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const service = document.getElementById('tarifService').value;
+        const prestation = document.getElementById('tarifPrestation').value;
+        const prix = document.getElementById('tarifPrix').value;
+        const description = document.getElementById('tarifDesc').value;
+        const ordre = parseInt(document.getElementById('tarifOrdre').value);
+        const active = document.getElementById('tarifActive').checked ? 1 : 0;
+        const res = await fetch('/api/tarifs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ service, prestation, prix, description, ordre, active })
+        });
+        if (res.ok) { alert("✅ Tarif ajouté"); loadTarifs(); document.getElementById('addTarifForm').reset(); }
+        else alert("Erreur");
+    });
+
+    // ========== NEWSLETTER ==========
+    async function loadNewsletterStats() {
+        try {
+            const res = await fetch('/api/newsletter/count');
+            const data = await res.json();
+            const container = document.getElementById('newsletterStats');
+            if (container) {
+                container.innerHTML = `<p>Total abonnés actifs : <strong>${data.count || 0}</strong></p><button id="exportEmailsBtn" class="btn-primary" style="margin-top:10px;">📎 Exporter les emails (CSV)</button>`;
+                document.getElementById('exportEmailsBtn')?.addEventListener('click', exportEmails);
+            }
+        } catch(err) { console.error(err); if(container) container.innerHTML = '<p>Erreur chargement</p>'; }
+    }
+
+    async function exportEmails() {
+        const res = await fetch('/api/newsletter/export');
+        const data = await res.json();
+        const blob = new Blob([data.emails.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'abonnes_newsletter.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('newsContent')?.addEventListener('input', function() {
+        const previewDiv = document.getElementById('newsPreview');
+        if (previewDiv) previewDiv.innerHTML = this.value || 'Aperçu du message...';
+    });
+
+    document.getElementById('newsletterSendForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const subject = document.getElementById('newsSubject').value;
+        const content = document.getElementById('newsContent').value;
+        const feedback = document.getElementById('newsFeedback');
+        const sendBtn = document.getElementById('sendNewsBtn');
+        if (!sendBtn) return;
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Envoi en cours...';
+        if (feedback) feedback.innerHTML = '<span style="color:blue;">Envoi en cours, cela peut prendre plusieurs secondes...</span>';
+        try {
+            const res = await fetch('/api/newsletter/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject, content })
+            });
+            const data = await res.json();
+            if (res.ok) feedback.innerHTML = `<span style="color:green;">✅ Envoi terminé : ${data.successCount} / ${data.total} emails réussis. Erreurs : ${data.errorCount}</span>`;
+            else feedback.innerHTML = `<span style="color:red;">❌ Erreur : ${data.error}</span>`;
+        } catch(err) { feedback.innerHTML = '<span style="color:red;">❌ Erreur réseau</span>'; }
+        finally { sendBtn.disabled = false; sendBtn.textContent = '📨 Envoyer à tous les abonnés'; }
+    });
+
+    // ========== 1. Rendez-vous (avec statuts vus) ==========
+    async function loadAppointments() {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="15">Chargement en cours...‹/td›‹/tr›';
+        try {
+            const res = await fetch('/api/appointments?_=' + Date.now());
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="15">Aucun rendez-vous pour le moment.‹/td›‹/tr›'; return; }
+            tbody.innerHTML = data.map(rdv => `
+                <tr>
+                    <td>${rdv.id}</td>
+                    <td>${escapeHtml(rdv.fullname)}</td>
+                    <td>${escapeHtml(rdv.email)}</td>
+                    <td>${escapeHtml(rdv.phone)}</td>
+                    <td>${escapeHtml(rdv.specialty || '-')}</td>
+                    <td>${escapeHtml(rdv.doctor_name || 'N/A')}</td>
+                    <td>${rdv.date}</td>
+                    <td>${rdv.time}</td>
+                    <td>${escapeHtml(rdv.message || '-')}</td>
+                    <td>${rdv.reminder_sent ? '<span class="reminder-sent">Envoyé</span>' : '<span class="reminder-pending">En attente</span>'}</td>
+                    <td>${new Date(rdv.created_at).toLocaleString()}</td>
+                    <td>${rdv.teleconsultation_link ? `<a href="${rdv.teleconsultation_link}" target="_blank">🎥 Rejoindre</a>` : '—'}</td>
+                    <td>${rdv.admin_viewed ? '✅' : '❌'}</td>
+                    <td>${rdv.doctor_viewed ? '✅' : '❌'}</td>
+                    <td>
+                        ${!rdv.admin_viewed ? `<button class="btn-view" onclick="markAppointmentAsViewedByAdmin(${rdv.id})" style="background:#0b6e8f; color:white; border:none; border-radius:12px; padding:4px 8px;">👁️ Marquer vu (admin)</button>` : ''}
+                        <button class="btn-edit" onclick="editRdv(${rdv.id})">✏️</button>
+                        <button class="btn-delete" onclick="deleteRdv(${rdv.id})">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = '<td><td colspan="15">Erreur de chargement. Vérifiez la console.‹/td›‹/tr›';
+        }
+    }
+
+    async function markAppointmentAsViewedByAdmin(id) {
+        try {
+            const res = await fetch(`/api/admin/appointments/${id}/view`, { method: 'PUT' });
+            if (res.ok) { alert("✅ Rendez-vous marqué comme vu par l'admin"); loadAppointments(); }
+            else alert("❌ Erreur lors du marquage");
+        } catch(err) { alert("Erreur réseau"); }
+    }
+
+    async function deleteRdv(id) {
+        if (!confirm("Supprimer ce rendez-vous ?")) return;
+        const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
+        if (res.ok) loadAppointments(); else alert("Erreur suppression");
+    }
+
+    function editRdv(id) {
+        fetch(`/api/appointments/${id}`).then(res => res.json()).then(rdv => {
+            const newFullname = prompt("Nom complet :", rdv.fullname); if (!newFullname) return;
+            const newEmail = prompt("Email :", rdv.email); if (!newEmail) return;
+            const newDate = prompt("Date (YYYY-MM-DD) :", rdv.date); if (!newDate) return;
+            const newTime = prompt("Heure :", rdv.time); if (!newTime) return;
+            const newMessage = prompt("Message :", rdv.message || "");
+            fetch(`/api/appointments/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullname: newFullname, email: newEmail, phone: rdv.phone, specialty: rdv.specialty, date: newDate, time: newTime, message: newMessage, doctor_id: rdv.doctor_id })
+            }).then(res => res.ok ? loadAppointments() : alert("Erreur modification"));
+        }).catch(() => alert("Erreur récupération"));
+    }
+
+    // ========== 2. Calendrier (avec cache-buster) ==========
+    async function loadCalendar() {
+        try {
+            const res = await fetch('/api/availabilities/calendar?_=' + Date.now());
+            const data = await res.json();
+            const grouped = {};
+            data.forEach(item => { (grouped[item.date] = grouped[item.date] || []).push(item); });
+            document.getElementById('calendarContainer').innerHTML = Object.keys(grouped).sort().map(date => `
+                <div class="calendar-day"><div class="calendar-date">${date}</div>
+                ${grouped[date].map(slot => `<div class="slot-item"><strong>${escapeHtml(slot.doctor_name)}</strong> ${slot.time_slot} <span class="${slot.is_booked ? 'booked' : 'available'}">${slot.is_booked ? '🔴 Réservé' : '🟢 Libre'}</span></div>`).join('')}</div>
+            `).join('');
+        } catch(err) { document.getElementById('calendarContainer').innerHTML = "Erreur chargement"; }
+    }
+
+    // ========== 3. Statistiques ==========
+    async function loadStats() {
+        try {
+            const res = await fetch('/api/stats');
+            const stats = await res.json();
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="stats-card"><div class="stats-number">${stats.total.total}</div><div>Total RDV</div></div>
+                <h3>📅 Par jour</h3><ul>${stats.perDay.map(d => `<li>${d.date} : ${d.nb} RDV</li>`).join('')}</ul>
+                <h3>👨‍⚕️ Par médecin</h3><ul>${stats.perDoctor.map(d => `<li>${d.name} : ${d.nb} RDV</li>`).join('')}</ul>
+            `;
+        } catch(err) { document.getElementById('statsContainer').innerHTML = "Erreur stats"; }
+    }
+
+    // ========== 4. Disponibilités (corrigé) ==========
+    async function loadDoctorsForSelect() {
+        try {
+            const res = await fetch('/api/doctors');
+            const doctors = await res.json();
+            const select = document.getElementById('docId');
+            if (doctors.length === 0) {
+                select.innerHTML = '<option>Aucun médecin trouvé</option>';
+                return;
+            }
+            select.innerHTML = doctors.map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('');
+        } catch(err) {
+            console.error(err);
+            document.getElementById('docId').innerHTML = '<option>Erreur chargement</option>';
+        }
+    }
+
+    async function loadAvailabilitiesList() {
+        try {
+            const res = await fetch('/api/availabilities/calendar?_=' + Date.now());
+            const data = await res.json();
+            const tbody = document.querySelector('#availTable tbody');
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="6">Aucun créneau pour le moment‹/td›‹/tr›';
+                return;
+            }
+            tbody.innerHTML = data.map(av => `
+                <tr>
+                    <td>${av.id}</td>
+                    <td>${escapeHtml(av.doctor_name)}</td>
+                    <td>${av.date}</td>
+                    <td>${av.time_slot}</td>
+                    <td>${av.is_booked ? 'Réservé' : 'Libre'}</td>
+                    <td>${av.is_booked ? '—' : `<button onclick="deleteAvailability(${av.id})" style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px;">🗑️</button>`}</td>
+                </tr>
+            `).join('');
+        } catch(err) {
+            console.error(err);
+            document.querySelector('#availTable tbody').innerHTML = '<tr><td colspan="6">Erreur chargement‹/td›‹/tr›';
+        }
+    }
+
+    async function deleteAvailability(id) {
+        if (!confirm("Supprimer ce créneau libre ?")) return;
+        try {
+            const res = await fetch(`/api/availabilities/${id}`, { method: 'DELETE' });
+            if (res.ok) { loadAvailabilitiesList(); loadCalendar(); }
+            else { const err = await res.json(); alert("Erreur : " + (err.error || "Créneau réservé ?")); }
+        } catch(err) { alert("Erreur réseau"); }
+    }
+
+    document.getElementById('addAvailabilityForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const doctor_id = document.getElementById('docId').value;
+        const date = document.getElementById('availDate').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const feedback = document.getElementById('availFormFeedback');
+        if (!doctor_id || !date || !startTime || !endTime) {
+            feedback.innerHTML = '<span style="color:red;">Veuillez remplir tous les champs</span>';
+            return;
+        }
+        const time_slot = `${startTime}-${endTime}`;
+        feedback.innerHTML = '<span style="color:blue;">Ajout en cours...</span>';
+        try {
+            const res = await fetch('/api/availabilities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ doctor_id, date, time_slot })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                feedback.innerHTML = '<span style="color:green;">✅ Créneau ajouté avec succès</span>';
+                loadAvailabilitiesList();
+                loadCalendar();
+                document.getElementById('addAvailabilityForm').reset();
+                setTimeout(() => feedback.innerHTML = '', 3000);
+            } else {
+                feedback.innerHTML = `<span style="color:red;">❌ ${result.error || 'Erreur (existe déjà ?)'}</span>`;
+            }
+        } catch(err) {
+            feedback.innerHTML = '<span style="color:red;">❌ Erreur réseau</span>';
+            console.error(err);
+        }
+    });
+
+    // ========== 5. Gestion médecins (avec Telegram Chat ID) ==========
+    async function loadDoctors() {
+        try {
+            const res = await fetch('/api/staff');
+            const staff = await res.json();
+            const tbody = document.querySelector('#doctorsTable tbody');
+            if (!staff.length) { tbody.innerHTML = '<tr><td colspan="6">Aucun médecin‹/td›‹/tr›'; return; }
+            tbody.innerHTML = staff.map(m => `
+                <tr>
+                    <td>${m.id}</td>
+                    <td>${escapeHtml(m.full_name)}</td>
+                    <td>${escapeHtml(m.specialty || m.profession)}</td>
+                    <td>${m.photo_url ? `<img src="${m.photo_url}" style="max-width:60px; max-height:60px; border-radius:50%;">` : '-'}</td>
+                    <td>${escapeHtml(m.telegram_chat_id || '-')}</td>
+                    <td><button onclick="editDoctor(${m.id})" style="color:#ffc107;">✏️</button><button onclick="deleteDoctor(${m.id})" style="color:#dc3545;">🗑️</button></td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); document.querySelector('#doctorsTable tbody').innerHTML = '<tr><td colspan="6">Erreur chargement‹/td›‹/tr›'; }
+    }
+
+    async function deleteDoctor(id) {
+        if (!confirm("Supprimer ce médecin ?")) return;
+        const res = await fetch(`/api/staff/${id}`, { method: 'DELETE' });
+        if (res.ok) loadDoctors(); else alert("Erreur suppression");
+    }
+
+    function editDoctor(id) {
+        fetch(`/api/staff/${id}`).then(r => r.json()).then(doc => {
+            const newName = prompt("Nom complet :", doc.full_name); if (!newName) return;
+            const newSpecialty = prompt("Spécialité :", doc.specialty); if (!newSpecialty) return;
+            const newDept = prompt("Département :", doc.department); if (!newDept) return;
+            const newEmail = prompt("Email :", doc.email); if (!newEmail) return;
+            const newChatId = prompt("Telegram Chat ID (laisser vide si inchangé) :", doc.telegram_chat_id || "");
+            const update = {
+                full_name: newName, profession: doc.profession, specialty: newSpecialty,
+                department: newDept, email: newEmail, phone: doc.phone, photo_url: doc.photo_url,
+                is_active: doc.is_active
+            };
+            if (newChatId !== null) update.telegram_chat_id = newChatId.trim() || null;
+            fetch(`/api/staff/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(update)
+            }).then(res => res.ok ? loadDoctors() : alert("Erreur modification"));
+        }).catch(() => alert("Erreur récupération"));
+    }
+
+    document.getElementById('docPhoto').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('photoPreview');
+        preview.innerHTML = '';
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = ev => { const img = document.createElement('img'); img.src = ev.target.result; img.className = 'preview-img'; preview.appendChild(img); };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('addDoctorForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const full_name = document.getElementById('docName').value.trim();
+        const specialty = document.getElementById('docSpecialty').value.trim();
+        const department = document.getElementById('docDepartment').value.trim();
+        const email = document.getElementById('docEmail').value.trim();
+        const telegram_chat_id = document.getElementById('docTelegramChatId').value.trim() || null;
+        const photoFile = document.getElementById('docPhoto').files[0];
+        let photo_url = null;
+        if (photoFile) {
+            const fd = new FormData(); fd.append('image', photoFile);
+            try {
+                const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+                const uploadData = await uploadRes.json();
+                if (uploadData.imageUrl) photo_url = uploadData.imageUrl;
+                else { alert("Erreur upload photo : " + (uploadData.error || "inconnue")); return; }
+            } catch(err) { alert("Erreur réseau upload : " + err.message); return; }
+        }
+        const profession = "Médecin";
+        const password = "123";
+        const payload = { full_name, profession, specialty, department, email, phone: "", photo_url, password, telegram_chat_id };
+        const res = await fetch('/api/staff', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            alert("✅ Médecin ajouté avec succès !");
+            loadDoctors();
+            document.getElementById('addDoctorForm').reset();
+            document.getElementById('photoPreview').innerHTML = '';
+        } else { const err = await res.json(); alert("Erreur : " + (err.error || "inconnue")); }
+    });
+
+    // ========== 6. Gestion événements ==========
+    async function loadEvents() {
+        const res = await fetch('/api/events');
+        const events = await res.json();
+        const tbody = document.querySelector('#eventsTable tbody');
+        tbody.innerHTML = events.map(e => `
+            <tr>
+                <td>${e.id}</td>
+                <td>${escapeHtml(e.title)}</td>
+                <td>${escapeHtml(e.description || '')}</td>
+                <td>${e.start_date || ''}</td>
+                <td>${e.end_date || ''}</td>
+                <td>${e.active ? 'Oui' : 'Non'}</td>
+                <td><button onclick="deleteEvent(${e.id})" style="color:#dc3545;">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteEvent(id) {
+        if (!confirm("Supprimer cet événement ?")) return;
+        const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+        if (res.ok) loadEvents(); else alert("Erreur");
+    }
+
+    document.getElementById('addEventForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('eventTitle').value;
+        const description = document.getElementById('eventDesc').value;
+        const start_date = document.getElementById('eventStart').value;
+        const end_date = document.getElementById('eventEnd').value;
+        const active = document.getElementById('eventActive').checked ? 1 : 0;
+        const res = await fetch('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description, start_date, end_date, active }) });
+        if (res.ok) { alert("✅ Événement ajouté"); loadEvents(); e.target.reset(); } else alert("Erreur");
+    });
+
+    // ========== 7. Contenu du site ==========
+    async function loadContent(page) {
+        try {
+            const res = await fetch(`/api/site-content/${page}`);
+            const data = await res.json();
+            const editorDiv = document.getElementById('contentEditor');
+            editorDiv.innerHTML = '';
+            if (page === 'tarifs' || page === 'paiement_facture') {
+                const value = data.contenu || '';
+                const textarea = document.createElement('textarea');
+                textarea.style.width = '100%'; textarea.style.padding = '8px'; textarea.style.borderRadius = '8px';
+                textarea.style.border = '1px solid #ccc'; textarea.style.fontFamily = 'monospace'; textarea.style.minHeight = '300px';
+                textarea.dataset.key = 'contenu'; textarea.value = value;
+                editorDiv.appendChild(textarea);
+            } else {
+                if (Object.keys(data).length === 0) { editorDiv.innerHTML = '<p>Aucun contenu pour cette page. Vous pouvez en ajouter via l\'API.</p>'; return; }
+                for (const [key, value] of Object.entries(data)) {
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const textarea = document.createElement('textarea');
+                    textarea.style.marginBottom = '15px'; textarea.style.width = '100%'; textarea.style.padding = '8px';
+                    textarea.style.borderRadius = '8px'; textarea.style.border = '1px solid #ccc';
+                    textarea.dataset.key = key; textarea.value = value || '';
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = `<strong>${label}</strong><br>`; wrapper.appendChild(textarea);
+                    editorDiv.appendChild(wrapper);
+                }
+            }
+        } catch(err) { console.error(err); document.getElementById('contentEditor').innerHTML = '<p>Erreur de chargement du contenu.</p>'; }
+    }
+
+    document.getElementById('contentPageSelect').addEventListener('change', () => { loadContent(document.getElementById('contentPageSelect').value); });
+    document.getElementById('saveContentBtn').addEventListener('click', async () => {
+        const page = document.getElementById('contentPageSelect').value;
+        const updates = {};
+        document.querySelectorAll('#contentEditor textarea').forEach(textarea => { updates[textarea.dataset.key] = textarea.value; });
+        const res = await fetch(`/api/site-content/${page}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+        if (res.ok) alert('✅ Contenu mis à jour avec succès !'); else alert('❌ Erreur lors de la mise à jour.');
+    });
+
+    // ========== 8. Actualités ==========
+    document.getElementById('actuImageFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const previewDiv = document.getElementById('imagePreview');
+        previewDiv.innerHTML = '';
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) { const img = document.createElement('img'); img.src = ev.target.result; img.className = 'preview-img'; previewDiv.appendChild(img); };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('addActuForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const titre = document.getElementById('actuTitre').value;
+        const description = document.getElementById('actuDesc').value;
+        const imageFile = document.getElementById('actuImageFile').files[0];
+        const ordre = parseInt(document.getElementById('actuOrdre').value);
+        const active = document.getElementById('actuActive').checked ? 1 : 0;
+        let image_url = null;
+        if (imageFile) {
+            const formData = new FormData(); formData.append('image', imageFile);
+            try {
+                const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                const uploadData = await uploadRes.json();
+                if (uploadData.imageUrl) image_url = uploadData.imageUrl;
+                else { alert("Erreur upload image : " + (uploadData.error || "inconnue")); return; }
+            } catch(err) { alert("Erreur réseau upload : " + err.message); return; }
+        }
+        const payload = { titre, description, image_url, ordre, active };
+        const res = await fetch('/api/actualites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) { alert("✅ Actualité ajoutée"); loadActualites(); document.getElementById('addActuForm').reset(); document.getElementById('imagePreview').innerHTML = ''; }
+        else { const err = await res.json(); alert("Erreur : " + (err.error || "inconnue")); }
+    });
+
+    async function loadActualites() {
+        const res = await fetch('/api/actualites');
+        const data = await res.json();
+        const tbody = document.querySelector('#actualitesTable tbody');
+        tbody.innerHTML = data.map(a => `
+            <tr>
+                <td>${a.id}</td>
+                <td>${escapeHtml(a.titre)}</td>
+                <td>${escapeHtml(a.description)}</td>
+                <td>${a.image_url ? `<img src="${a.image_url}" class="preview-img" style="max-width:60px;">` : '-'}</td>
+                <td>${a.ordre}</td>
+                <td>${a.active ? 'Oui' : 'Non'}</td>
+                <td><button onclick="editActualite(${a.id})" style="color:#ffc107;">✏️</button><button onclick="deleteActualite(${a.id})" style="color:#dc3545;">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteActualite(id) {
+        if (!confirm("Supprimer cette actualité ?")) return;
+        const res = await fetch(`/api/actualites/${id}`, { method: 'DELETE' });
+        if (res.ok) loadActualites(); else alert("Erreur suppression");
+    }
+
+    function editActualite(id) {
+        const newTitre = prompt("Nouveau titre :"); if (!newTitre) return;
+        const newDesc = prompt("Nouvelle description :"); if (!newDesc) return;
+        const newOrdre = prompt("Ordre :");
+        const newActive = confirm("Actif ? (OK pour oui, Annuler pour non)");
+        fetch(`/api/actualites/${id}`).then(res => res.json()).then(actu => {
+            fetch(`/api/actualites/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titre: newTitre, description: newDesc, image_url: actu.image_url, ordre: parseInt(newOrdre) || 0, active: newActive ? 1 : 0 })
+            }).then(res => res.ok ? loadActualites() : alert("Erreur modification"));
+        }).catch(() => alert("Erreur récupération"));
+    }
+
+    // ========== 9. Spécialités ==========
+    async function loadSpecialties() {
+        const res = await fetch('/api/specialties');
+        const data = await res.json();
+        const tbody = document.querySelector('#specialtiesTable tbody');
+        tbody.innerHTML = data.map(s => `
+            <tr>
+                <td>${s.id}</td>
+                <td>${escapeHtml(s.name)}</td>
+                <td>${escapeHtml(s.description || '')}</td>
+                <td>${s.ordre}</td>
+                <td>${s.active ? 'Oui' : 'Non'}</td>
+                <td><button onclick="deleteSpecialty(${s.id})" style="color:#dc3545;">🗑️</button><button onclick="editSpecialty(${s.id})" style="color:#ffc107;">✏️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteSpecialty(id) {
+        if (!confirm("Supprimer cette spécialité ?")) return;
+        const res = await fetch(`/api/specialties/${id}`, { method: 'DELETE' });
+        if (res.ok) loadSpecialties(); else alert("Erreur");
+    }
+
+    function editSpecialty(id) {
+        const newName = prompt("Nouveau nom :"); if (!newName) return;
+        const newDesc = prompt("Nouvelle description :");
+        const newOrdre = prompt("Ordre :");
+        const newActive = confirm("Active ? (OK pour oui, Annuler pour non)");
+        fetch(`/api/specialties/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName, description: newDesc || null, ordre: parseInt(newOrdre) || 0, active: newActive ? 1 : 0 })
+        }).then(res => res.ok ? loadSpecialties() : alert("Erreur"));
+    }
+
+    document.getElementById('addSpecialtyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('specName').value;
+        const description = document.getElementById('specDesc').value;
+        const ordre = parseInt(document.getElementById('specOrdre').value);
+        const active = document.getElementById('specActive').checked ? 1 : 0;
+        const res = await fetch('/api/specialties', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description, ordre, active })
+        });
+        if (res.ok) { alert("✅ Spécialité ajoutée"); loadSpecialties(); e.target.reset(); } else alert("Erreur");
+    });
+
+    // ========== Établissement ==========
+    document.getElementById('etabImageFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('etabPreview');
+        preview.innerHTML = '';
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = ev => { const img = document.createElement('img'); img.src = ev.target.result; img.className = 'preview-img'; preview.appendChild(img); };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('addEtablissementForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const titre = document.getElementById('etabTitre').value;
+        const description = document.getElementById('etabDesc').value;
+        const ordre = parseInt(document.getElementById('etabOrdre').value);
+        const active = document.getElementById('etabActive').checked ? 1 : 0;
+        const file = document.getElementById('etabImageFile').files[0];
+        if (!file) { alert("Veuillez sélectionner une image"); return; }
+        const fd = new FormData(); fd.append('image', file);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.imageUrl) { alert("Erreur upload"); return; }
+        const image_url = uploadData.imageUrl;
+        const res = await fetch('/api/etablissement', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titre, description, image_url, ordre, active })
+        });
+        if (res.ok) { alert("✅ Ajouté"); loadEtablissement(); e.target.reset(); document.getElementById('etabPreview').innerHTML = ''; }
+        else alert("Erreur");
+    });
+
+    async function loadEtablissement() {
+        const res = await fetch('/api/etablissement');
+        const data = await res.json();
+        const tbody = document.querySelector('#etablissementTable tbody');
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>${p.id}</td>
+                <td>${escapeHtml(p.titre)}</td>
+                <td>${p.image_url ? `<img src="${p.image_url}" style="max-width:60px;">` : '-'}</td>
+                <td>${p.ordre}</td>
+                <td>${p.active ? 'Oui' : 'Non'}</td>
+                <td><button onclick="deleteEtablissement(${p.id})" style="color:#dc3545;">🗑️</button></td>
+            </td>
+        `).join('');
+    }
+
+    async function deleteEtablissement(id) {
+        if (!confirm("Supprimer ?")) return;
+        const res = await fetch(`/api/etablissement/${id}`, { method: 'DELETE' });
+        if (res.ok) loadEtablissement(); else alert("Erreur");
+    }
+
+    // ========== Partenaires ==========
+    document.getElementById('partImageFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('partPreview');
+        preview.innerHTML = '';
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = ev => { const img = document.createElement('img'); img.src = ev.target.result; img.className = 'preview-img'; preview.appendChild(img); };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('addPartenaireForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nom = document.getElementById('partNom').value;
+        const description = document.getElementById('partDesc').value;
+        const commentaire = document.getElementById('partCommentaire').value;
+        const ordre = parseInt(document.getElementById('partOrdre').value);
+        const active = document.getElementById('partActive').checked ? 1 : 0;
+        const file = document.getElementById('partImageFile').files[0];
+        if (!file) { alert("Veuillez sélectionner une image"); return; }
+        const fd = new FormData(); fd.append('image', file);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.imageUrl) { alert("Erreur upload"); return; }
+        const image_url = uploadData.imageUrl;
+        const res = await fetch('/api/partenaires', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nom, description, image_url, commentaire, ordre, active })
+        });
+        if (res.ok) { alert("✅ Ajouté"); loadPartenaires(); e.target.reset(); document.getElementById('partPreview').innerHTML = ''; }
+        else alert("Erreur");
+    });
+
+    async function loadPartenaires() {
+        const res = await fetch('/api/partenaires');
+        const data = await res.json();
+        const tbody = document.querySelector('#partenairesTable tbody');
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>${p.id}</td>
+                <td>${escapeHtml(p.nom)}</td>
+                <td>${p.image_url ? `<img src="${p.image_url}" style="max-width:60px;">` : '-'}</td>
+                <td>${escapeHtml(p.commentaire || '')}</td>
+                <td>${p.ordre}</td>
+                <td>${p.active ? 'Oui' : 'Non'}</td>
+                <td><button onclick="deletePartenaire(${p.id})" style="color:#dc3545;">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function deletePartenaire(id) {
+        if (!confirm("Supprimer ?")) return;
+        const res = await fetch(`/api/partenaires/${id}`, { method: 'DELETE' });
+        if (res.ok) loadPartenaires(); else alert("Erreur");
+    }
+
+    // ========== FOOTER ==========
+    async function loadFooterContent() {
+        try {
+            const res = await fetch('/api/site-content/footer');
+            const data = await res.json();
+            document.getElementById('footer_etablissement').value = data.etablissement || 'Medical Center Elizabeth (MCE)';
+            document.getElementById('footer_adresse').value = data.adresse || '33 Avenue de l\'Innovation, Paris 75012';
+            document.getElementById('footer_telephone').value = data.telephone || '+33 (0)1 88 88 88 88';
+            document.getElementById('footer_urgences').value = data.urgences || 'Urgences 24/7 - Accès permanent';
+            document.getElementById('footer_technologies').value = data.technologies || '▪ IRM 7T & Photon-counting\n▪ Salle hybride connectée\n▪ Exosquelettes rééducation\n▪ Télémédecine immersive';
+            document.getElementById('footer_liens').value = data.liens || 'Espace patient sécurisé|/espace-patient.html\nAvis et références|#\nRecrutement medical MCE|#';
+            document.getElementById('footer_copyright').value = data.copyright || '© 2026 Medical Center Elizabeth (MCE) — Soins d\'excellence, éthique et innovations médicales.';
+            document.getElementById('footer_reseaux').value = data.reseaux || 'fab fa-twitter, fab fa-linkedin, fab fa-instagram';
+        } catch(err) { console.error(err); }
+    }
+
+    document.getElementById('footerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const updates = {
+            etablissement: document.getElementById('footer_etablissement').value,
+            adresse: document.getElementById('footer_adresse').value,
+            telephone: document.getElementById('footer_telephone').value,
+            urgences: document.getElementById('footer_urgences').value,
+            technologies: document.getElementById('footer_technologies').value,
+            liens: document.getElementById('footer_liens').value,
+            copyright: document.getElementById('footer_copyright').value,
+            reseaux: document.getElementById('footer_reseaux').value
+        };
+        const res = await fetch('/api/site-content/footer', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+        const feedback = document.getElementById('footerFeedback');
+        if (res.ok) { feedback.innerHTML = '<span style="color:green;">✅ Footer mis à jour avec succès !</span>'; setTimeout(() => feedback.innerHTML = '', 3000); }
+        else feedback.innerHTML = '<span style="color:red;">❌ Erreur lors de la mise à jour.</span>';
+    });
+
+    // ========== CAISSE (Paiements) ==========
+    async function loadPaiements() {
+        try {
+            const res = await fetch('/api/paiements');
+            const data = await res.json();
+            const tbody = document.querySelector('#paiementsTable tbody');
+            if (!tbody) return;
+            if (data.length === 0) { tbody.innerHTML = '<td><td colspan="8">Aucun paiement‹/td›‹/tr›'; return; }
+            tbody.innerHTML = data.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${escapeHtml(p.nom_client || '-')}<br><small>${escapeHtml(p.email_client || '-')}</small></td>
+                    <td>${p.montant}€</td>
+                    <td>${p.methode === 'mobile_money' ? '📱 Mobile Money' : '💳 Carte'}</td>
+                    <td><span style="color:${p.statut === 'confirme' ? 'green' : 'orange'}">${p.statut}</span></td>
+                    <td>${p.code_confirmation || '-'}</td>
+                    <td>${new Date(p.date_paiement).toLocaleString()}</td>
+                    <td>${p.facture_url ? `<a href="${p.facture_url}" target="_blank">📄 Télécharger</a>` : '-'}</td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); }
+    }
+
+    async function loadPaymentConfigAdmin() {
+        try {
+            const res = await fetch('/api/paiement/config');
+            const config = await res.json();
+            document.getElementById('config_iban').value = config.iban || '';
+            document.getElementById('config_bic').value = config.bic || '';
+            document.getElementById('config_titulaire').value = config.titulaire || '';
+            document.getElementById('config_mobile_money_info').value = config.mobile_money_info || '';
+            document.getElementById('config_carte_info').value = config.carte_info || '';
+        } catch(err) { console.error(err); }
+    }
+
+    document.getElementById('configPaiementForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const updates = {
+            iban: document.getElementById('config_iban').value,
+            bic: document.getElementById('config_bic').value,
+            titulaire: document.getElementById('config_titulaire').value,
+            mobile_money_info: document.getElementById('config_mobile_money_info').value,
+            carte_info: document.getElementById('config_carte_info').value
+        };
+        const res = await fetch('/api/paiement/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+        const feedback = document.getElementById('configFeedback');
+        if (res.ok) feedback.innerHTML = '<span style="color:green;">✅ Configuration mise à jour</span>';
+        else feedback.innerHTML = '<span style="color:red;">❌ Erreur</span>';
+    });
+
+    // ========== RÉSULTATS LABORATOIRE ==========
+    async function loadPendingResults() {
+        try {
+            const res = await fetch('/api/admin/results/pending');
+            const data = await res.json();
+            const tbody = document.querySelector('#pendingResultsTable tbody');
+            if (!data.length) { tbody.innerHTML = '<tr><td colspan="7">Aucun résultat en attente‹/td›‹/tr›'; return; }
+            tbody.innerHTML = data.map(r => `
+                <tr>
+                    <td>${r.id}</td>
+                    <td>${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td>
+                    <td>${escapeHtml(r.email)}</td>
+                    <td>${escapeHtml(r.type)}</td>
+                    <td>${escapeHtml(r.description || '')}</td>
+                    <td>${r.file_url ? `<a href="${r.file_url}" target="_blank">📄 Fichier</a>` : '-'}</td>
+                    <td>${new Date(r.created_at).toLocaleString()}</td>
+                    <td><button onclick="publishResult(${r.id})" style="background:#28a745; color:white; padding:4px 10px; border-radius:20px;">✅ Publier</button></td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); document.querySelector('#pendingResultsTable tbody').innerHTML = '<tr><td colspan="7">Erreur de chargement‹/td›‹/tr›'; }
+    }
+
+    async function publishResult(id) {
+        if (!confirm("Publier ce résultat ? Il deviendra visible par le patient.")) return;
+        try {
+            const res = await fetch(`/api/admin/results/${id}/publish`, { method: 'PUT' });
+            if (res.ok) { alert("✅ Résultat publié !"); loadPendingResults(); } else alert("❌ Erreur lors de la publication");
+        } catch(err) { alert("Erreur réseau"); }
+    }
+
+    async function loadPatientsForSelect() {
+        try {
+            const res = await fetch('/api/patients');
+            const patients = await res.json();
+            const select = document.getElementById('resultPatientId');
+            select.innerHTML = '<option value="">-- Choisir un patient --</option>' + patients.map(p => `<option value="${p.id}">${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)} (${escapeHtml(p.email)})</option>`).join('');
+        } catch(err) { console.error(err); }
+    }
+
+    document.getElementById('addResultForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const patient_id = document.getElementById('resultPatientId').value;
+        const type = document.getElementById('resultType').value;
+        const description = document.getElementById('resultDesc').value;
+        const file_url = document.getElementById('resultFileUrl').value;
+        const feedbackDiv = document.getElementById('addResultFeedback');
+        if (!patient_id || !type) { feedbackDiv.innerHTML = '<span style="color:red;">Veuillez sélectionner un patient et un type</span>'; return; }
+        try {
+            const res = await fetch('/api/admin/results', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient_id, type, description, file_url })
+            });
+            if (res.ok) { feedbackDiv.innerHTML = '<span style="color:green;">✅ Résultat ajouté (en attente de publication)</span>'; document.getElementById('addResultForm').reset(); loadPendingResults(); }
+            else { const err = await res.json(); feedbackDiv.innerHTML = `<span style="color:red;">❌ ${err.error}</span>`; }
+        } catch(err) { feedbackDiv.innerHTML = '<span style="color:red;">❌ Erreur réseau</span>'; }
+    });
+
+    // ========== PATIENTS ADMIN ==========
+    async function loadPatients() {
+        try {
+            const res = await fetch('/api/admin/patients');
+            const patients = await res.json();
+            const tbody = document.querySelector('#patientsTable tbody');
+            if (!patients.length) { tbody.innerHTML = '</table><td colspan="7">Aucun patient‹/td›‹/tr›'; return; }
+            tbody.innerHTML = patients.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${escapeHtml(p.first_name)}</td>
+                    <td>${escapeHtml(p.last_name)}</td>
+                    <td>${escapeHtml(p.email)}</td>
+                    <td>${escapeHtml(p.phone || '-')}</td>
+                    <td>${new Date(p.created_at).toLocaleDateString()}</td>
+                    <td><button onclick="editPatient(${p.id})" style="color:#ffc107;">✏️</button><button onclick="deletePatient(${p.id})" style="color:#dc3545;">🗑️</button></td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); document.querySelector('#patientsTable tbody').innerHTML = '<tr><td colspan="7">Erreur de chargement‹/td›‹/tr›'; }
+    }
+
+    async function deletePatient(id) {
+        if (!confirm("Supprimer définitivement ce patient ?")) return;
+        try {
+            const res = await fetch(`/api/admin/patients/${id}`, { method: 'DELETE' });
+            if (res.ok) { alert("✅ Patient supprimé"); loadPatients(); } else alert("❌ Erreur suppression");
+        } catch(err) { alert("Erreur réseau"); }
+    }
+
+    function editPatient(id) {
+        fetch(`/api/patients/${id}`).then(r => r.json()).then(p => {
+            const newFirst = prompt("Prénom :", p.first_name); if (!newFirst) return;
+            const newLast = prompt("Nom :", p.last_name); if (!newLast) return;
+            const newEmail = prompt("Email :", p.email); if (!newEmail) return;
+            const newPhone = prompt("Téléphone :", p.phone || "");
+            const newPwd = prompt("Nouveau mot de passe (laisser vide pour conserver) :", "");
+            const body = { first_name: newFirst, last_name: newLast, email: newEmail, phone: newPhone };
+            if (newPwd && newPwd.trim()) body.password = newPwd;
+            fetch(`/api/admin/patients/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            }).then(res => res.ok ? loadPatients() : alert("Erreur modification"));
+        }).catch(() => alert("Erreur récupération patient"));
+    }
+
+    document.getElementById('addPatientForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const first_name = document.getElementById('patientFirstname').value;
+        const last_name = document.getElementById('patientLastname').value;
+        const email = document.getElementById('patientEmail').value;
+        const phone = document.getElementById('patientPhone').value;
+        const password = document.getElementById('patientPassword').value;
+        if (!first_name || !last_name || !email || !password) { alert("Veuillez remplir tous les champs obligatoires"); return; }
+        try {
+            const res = await fetch('/api/admin/patients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ first_name, last_name, email, phone, password })
+            });
+            if (res.ok) { alert("✅ Patient ajouté"); loadPatients(); document.getElementById('addPatientForm').reset(); }
+            else { const err = await res.json(); alert("Erreur : " + (err.error || "inconnue")); }
+        } catch(err) { alert("Erreur réseau"); }
+    });
+
+    // ========== Gestion des onglets ==========
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabId = tab.getAttribute('data-tab');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const targetDiv = document.getElementById(`tab-${tabId}`);
+            if (targetDiv) targetDiv.classList.add('active');
+            else console.warn(`Élément #tab-${tabId} introuvable`);
+            if (tabId === 'rdv') loadAppointments();
+            if (tabId === 'applications') loadApplications();
+            if (tabId === 'jobs') loadJobs();
+            if (tabId === 'calendar') loadCalendar();
+            if (tabId === 'tarifs') loadTarifs();
+            if (tabId === 'stats') loadStats();
+            if (tabId === 'manage') { loadDoctorsForSelect(); loadAvailabilitiesList(); }
+            if (tabId === 'doctors') loadDoctors();
+            if (tabId === 'events') loadEvents();
+            if (tabId === 'content') loadContent(document.getElementById('contentPageSelect').value);
+            if (tabId === 'actualites') loadActualites();
+            if (tabId === 'specialties') loadSpecialties();
+            if (tabId === 'etablissement') loadEtablissement();
+            if (tabId === 'partenaires') loadPartenaires();
+            if (tabId === 'footer') loadFooterContent();
+            if (tabId === 'newsletter') loadNewsletterStats();
+            if (tabId === 'caisse') { loadPaiements(); loadPaymentConfigAdmin(); }
+            if (tabId === 'results') { loadPendingResults(); loadPatientsForSelect(); }
+            if (tabId === 'patients') loadPatients();
+        });
+    });
+
+    // Rafraîchissement automatique toutes les 10 secondes
+    setInterval(() => {
+        const activeTab = document.querySelector('.tab.active')?.getAttribute('data-tab');
+        switch (activeTab) {
+            case 'rdv': loadAppointments(); break;
+            case 'calendar': loadCalendar(); break;
+            case 'stats': loadStats(); break;
+            case 'applications': loadApplications(); break;
+            case 'jobs': loadJobs(); break;
+            case 'manage': loadAvailabilitiesList(); break;
+            case 'doctors': loadDoctors(); break;
+            case 'events': loadEvents(); break;
+            case 'actualites': loadActualites(); break;
+            case 'specialties': loadSpecialties(); break;
+            case 'etablissement': loadEtablissement(); break;
+            case 'partenaires': loadPartenaires(); break;
+            case 'newsletter': loadNewsletterStats(); break;
+            case 'footer': loadFooterContent(); break;
+            case 'tarifs': loadTarifs(); break;
+            case 'caisse': loadPaiements(); break;
+            case 'results': { loadPendingResults(); loadPatientsForSelect(); break; }
+            case 'patients': loadPatients(); break;
+            default: break;
+        }
+    }, 10000);
+</script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration MCE – Modifier une actualité</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7fc; margin: 0; padding: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h1 { color: #0b6e8f; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a2c3e; }
+        input[type="text"], textarea, input[type="number"] { width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 1rem; font-family: inherit; }
+        textarea { min-height: 100px; }
+        .checkbox { display: flex; align-items: center; gap: 0.5rem; }
+        .checkbox label { margin-bottom: 0; }
+        .current-image { margin: 0.5rem 0; max-width: 200px; border-radius: 0.5rem; overflow: hidden; }
+        .preview-image { margin-top: 0.5rem; max-width: 200px; border: 1px solid #ddd; border-radius: 0.5rem; }
+        .btn-primary { background: #0b6e8f; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 2rem; cursor: pointer; font-size: 1rem; }
+        .btn-secondary { background: #e2e8f0; color: #1a2c3e; border: none; padding: 0.8rem 1.5rem; border-radius: 2rem; cursor: pointer; text-decoration: none; display: inline-block; margin-left: 1rem; }
+        .btn-primary:hover { background: #07506b; }
+        .alert { padding: 0.8rem; border-radius: 1rem; margin-bottom: 1rem; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+        .form-actions { margin-top: 2rem; display: flex; gap: 1rem; align-items: center; }
+        hr { margin: 1rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📰 Modifier / Ajouter une actualité</h1>
+    <form id="actuForm">
+        <input type="hidden" id="actuId" value="">
+        <div class="form-group">
+            <label>Titre *</label>
+            <input type="text" id="titre" required>
+        </div>
+        <div class="form-group">
+            <label>Description *</label>
+            <textarea id="description" required></textarea>
+        </div>
+        <div class="form-group">
+            <label>Ordre d'affichage (1 = en premier)</label>
+            <input type="number" id="ordre" value="0">
+        </div>
+        <div class="form-group checkbox">
+            <input type="checkbox" id="active" checked>
+            <label>Actif ?</label>
+        </div>
+
+        <!-- SECTION UPLOAD IMAGE -->
+        <div class="form-group">
+            <label>Image actuelle</label>
+            <div id="currentImageContainer" class="current-image"></div>
+            <input type="hidden" id="existingImageUrl" value="">
+        </div>
+        <div class="form-group">
+            <label>Changer l’image (fichier depuis votre ordinateur)</label>
+            <input type="file" id="imageFile" accept="image/jpeg,image/png,image/gif,image/webp">
+            <div id="preview" class="preview-image"></div>
+            <small>Formats autorisés : JPG, PNG, GIF, WEBP – max 5 Mo</small>
+        </div>
+
+        <hr>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">💾 Enregistrer</button>
+            <a href="/admin/actualites-liste.html" class="btn-secondary">Annuler</a>
+        </div>
+        <div id="formFeedback"></div>
+    </form>
+</div>
+
+<script>
+    // Récupérer l'ID depuis l'URL (?id=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const actuId = urlParams.get('id');
+    const isEdit = actuId && actuId !== 'new';
+
+    // Références DOM
+    const form = document.getElementById('actuForm');
+    const titreInput = document.getElementById('titre');
+    const descriptionInput = document.getElementById('description');
+    const ordreInput = document.getElementById('ordre');
+    const activeCheck = document.getElementById('active');
+    const actuIdHidden = document.getElementById('actuId');
+    const currentImageDiv = document.getElementById('currentImageContainer');
+    const existingImageUrlHidden = document.getElementById('existingImageUrl');
+    const imageFileInput = document.getElementById('imageFile');
+    const previewDiv = document.getElementById('preview');
+    const feedbackDiv = document.getElementById('formFeedback');
+
+    // Charger les données si c'est une modification
+    if (isEdit) {
+        actuIdHidden.value = actuId;
+        fetch(`/api/actualites/${actuId}`)
+            .then(res => res.json())
+            .then(data => {
+                titreInput.value = data.titre || '';
+                descriptionInput.value = data.description || '';
+                ordreInput.value = data.ordre !== undefined ? data.ordre : 0;
+                activeCheck.checked = data.active === 1;
+                if (data.image_url && data.image_url !== '') {
+                    existingImageUrlHidden.value = data.image_url;
+                    currentImageDiv.innerHTML = `<img src="${data.image_url}" style="max-width:100%; border-radius:0.5rem;">`;
+                } else {
+                    currentImageDiv.innerHTML = '<em>Aucune image</em>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                feedbackDiv.innerHTML = '<div class="alert alert-error">Erreur chargement de l\'actualité</div>';
+            });
+    } else {
+        // Nouvelle actualité
+        actuIdHidden.value = '';
+        currentImageDiv.innerHTML = '<em>Aucune image actuelle</em>';
+    }
+
+    // Aperçu de la nouvelle image sélectionnée
+    imageFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                previewDiv.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border-radius:0.5rem;">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewDiv.innerHTML = '';
+        }
+    });
+
+    // Soumission du formulaire
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        feedbackDiv.innerHTML = '<div class="alert">Envoi en cours...</div>';
+
+        let imageUrl = existingImageUrlHidden.value || null; // image existante ou null
+        const file = imageFileInput.files[0];
+
+        // 1. Upload de la nouvelle image si un fichier a été sélectionné
+        if (file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                const uploadData = await uploadRes.json();
+                if (uploadData.imageUrl) {
+                    imageUrl = uploadData.imageUrl;
+                } else {
+                    throw new Error(uploadData.error || 'Upload échoué');
+                }
+            } catch (err) {
+                feedbackDiv.innerHTML = `<div class="alert alert-error">Erreur upload image : ${err.message}</div>`;
+                return;
+            }
+        }
+
+        // 2. Préparer les données de l'actualité
+        const payload = {
+            titre: titreInput.value.trim(),
+            description: descriptionInput.value.trim(),
+            image_url: imageUrl,
+            ordre: parseInt(ordreInput.value, 10),
+            active: activeCheck.checked ? 1 : 0
+        };
+
+        // 3. Envoi (POST ou PUT)
+        const method = isEdit ? 'PUT' : 'POST';
+        const url = isEdit ? `/api/actualites/${actuId}` : '/api/actualites';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                feedbackDiv.innerHTML = '<div class="alert alert-success">✅ Actualité enregistrée avec succès !</div>';
+                // Redirection éventuelle après 1.5s
+                setTimeout(() => {
+                    window.location.href = '/admin/actualites-liste.html';
+                }, 1500);
+            } else {
+                feedbackDiv.innerHTML = `<div class="alert alert-error">Erreur : ${result.error || 'Inconnue'}</div>`;
+            }
+        } catch (err) {
+            feedbackDiv.innerHTML = `<div class="alert alert-error">Erreur réseau : ${err.message}</div>`;
+        }
+    });
+</script>
+</body>
+</html>
