@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* ... vos styles existants ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f0f7fc; color: #1a2c3e; }
         .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
@@ -120,14 +119,16 @@
 </footer>
 
 <script>
-    const API_URL = '/api';
+    // ========== CONFIGURATION API ==========
+    const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
+    
     let currentResults = [];
     
     async function loadFilters() {
         try {
             const [professionsRes, departmentsRes] = await Promise.all([
-                fetch(`${API_URL}/staff/professions`),
-                fetch(`${API_URL}/staff/departments`)
+                fetch(`${API_BASE}/staff/professions`),
+                fetch(`${API_BASE}/staff/departments`)
             ]);
             
             const professions = await professionsRes.json();
@@ -150,7 +151,7 @@
         const profession = document.getElementById('professionFilter').value;
         const department = document.getElementById('departmentFilter').value;
         
-        let url = `${API_URL}/staff?`;
+        let url = `${API_BASE}/staff?`;
         if (search) url += `search=${encodeURIComponent(search)}&`;
         if (profession) url += `profession=${encodeURIComponent(profession)}&`;
         if (department) url += `department=${encodeURIComponent(department)}&`;

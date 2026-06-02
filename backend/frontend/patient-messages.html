@@ -81,7 +81,9 @@
 </div>
 
 <script>
-    const API_URL = '/api';
+    // ========== CONFIGURATION API ==========
+    const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
+    
     let currentPatient = null;
     let authToken = null;
 
@@ -108,7 +110,7 @@
     // Charger la liste des professionnels (staff)
     async function loadStaffList() {
         try {
-            const res = await fetch(`${API_URL}/staff`);
+            const res = await fetch(`${API_BASE}/staff`);
             const staff = await res.json();
             const select = document.getElementById('receiverStaff');
             select.innerHTML = '<option value="">-- Choisir un professionnel --</option>' + 
@@ -122,7 +124,7 @@
     async function loadMessages() {
         if (!currentPatient) return;
         try {
-            const res = await fetch(`${API_URL}/messages/patient/${currentPatient.id}`, {
+            const res = await fetch(`${API_BASE}/messages/patient/${currentPatient.id}`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             if (res.status === 401) {
@@ -135,7 +137,7 @@
             displayMessages(messages);
 
             // Charger le nombre de non lus
-            const unreadRes = await fetch(`${API_URL}/messages/unread/patient/${currentPatient.id}`, {
+            const unreadRes = await fetch(`${API_BASE}/messages/unread/patient/${currentPatient.id}`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             const unread = await unreadRes.json();
@@ -175,7 +177,7 @@
         // Marquer les messages reçus comme lus
         messages.forEach(msg => {
             if (msg.is_read === 0 && msg.receiver_type === 'patient') {
-                fetch(`${API_URL}/messages/${msg.id}/read`, {
+                fetch(`${API_BASE}/messages/${msg.id}/read`, {
                     method: 'PUT',
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 }).catch(console.error);
@@ -202,7 +204,7 @@
         }
 
         try {
-            const res = await fetch(`${API_URL}/messages/${msgId}/reply`, {
+            const res = await fetch(`${API_BASE}/messages/${msgId}/reply`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -254,7 +256,7 @@
         };
 
         try {
-            const res = await fetch(`${API_URL}/messages`, {
+            const res = await fetch(`${API_BASE}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

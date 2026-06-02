@@ -91,7 +91,7 @@
 
     <div id="jobs" class="tab-pane">
         <button class="btn-add" onclick="openForm('job')">+ Ajouter une offre</button>
-        <table id="jobs-table"><thead><tr><th>Titre</th><th>Département</th><th>Type</th><th>Localisation</th><th>Actif</th><th>Actions</th></tr></thead><tbody></tbody></table>
+        <table id="jobs-table"><thead><tr><th>Titre</th><th>Département</th><th>Type</th><th>Localisation</th><th>Actif</th><th>Actions</th></tr></thead><tbody></tbody></tr>
     </div>
 
     <div id="site" class="tab-pane">
@@ -102,7 +102,9 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'medical_center_db';
+    // ========== CONFIGURATION API ==========
+    const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
+    
     let currentEditId = null;
     let currentType = null;
 
@@ -121,94 +123,139 @@
         setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
     }
 
-    function getDB() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            return JSON.parse(saved);
-        }
-        // Structure complète avec events
-        return {
-            specialties: [],
-            actualites: [],
-            doctors: [],
-            staff: [],
-            events: [  // Collection events bien définie
-                { id: 1, icon: "fas fa-syringe", title: "Campagne vaccination", description: "grippe saisonnière – à partir du 15 octobre", ordre: 1, active: 1 },
-                { id: 2, icon: "fas fa-heartbeat", title: "Dépistage gratuit", description: "hypertension & diabète – tous les mercredis", ordre: 2, active: 1 },
-                { id: 3, icon: "fas fa-chalkboard-user", title: "Atelier 'Mieux vivre'", description: "gestion du stress & alimentation – samedi 20 mai", ordre: 3, active: 1 },
-                { id: 4, icon: "fas fa-laptop-medical", title: "Téléconsultation 24/7", description: "prise de RDV en ligne immédiate", ordre: 4, active: 1 }
-            ],
-            jobs: [],
-            siteContent: {
-                hero_title: "Bienvenue au Medical Center Elizabeth (MCE)",
-                hero_subtitle: "Soins d'excellence",
-                hero_desc: "Blocs opératoires robotisés, diagnostic augmenté par intelligence artificielle...",
-                stat1_number: "98%", stat1_label: "Satisfaction patient",
-                stat2_number: "24/7", stat2_label: "Urgences & téléconsultation",
-                stat3_number: "+150", stat3_label: "Spécialistes hautement qual."
-            }
-        };
-    }
-
-    function saveDB(db) {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-            return true;
-        } catch (e) {
-            console.error('Erreur saveDB:', e);
-            alert('Erreur de sauvegarde: ' + e.message);
-            return false;
-        }
-    }
-
-    function getNextId(db, collection) {
-        const items = db[collection] || [];
-        return items.length > 0 ? Math.max(...items.map(item => item.id)) + 1 : 1;
-    }
-
-    function checkAuth() {
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            window.location.href = '/admin-login.html';
-            return false;
-        }
-        document.getElementById('adminName').innerText = 'Administrateur';
-        return true;
-    }
-
-    function logout() {
-        localStorage.removeItem('adminToken');
-        window.location.href = '/';
-    }
-
-    // Onglets
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const tabId = btn.dataset.tab;
-            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            loadTabData(tabId);
+    async function fetchAPI(endpoint, options = {}) {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
+            headers: { 'Content-Type': 'application/json', ...options.headers }
         });
-    });
-
-    function loadTabData(tab) {
-        if (tab === 'specialties') loadSpecialties();
-        else if (tab === 'actualites') loadActualites();
-        else if (tab === 'doctors') loadDoctors();
-        else if (tab === 'staff') loadStaff();
-        else if (tab === 'events') loadEvents();
-        else if (tab === 'jobs') loadJobs();
-        else if (tab === 'site') loadSiteContent();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
     }
+
+    // ============ SPÉCIALITÉS ============
+    async function loadSpecialties() {
+        try {
+            const specialties = await fetchAPI('/specialties');
+            const tbody = document.querySelector('#specialties-table tbody');
+            tbody.innerHTML = specialties.map(s => `
+                <tr>
+                    <td>${escapeHtml(s.name)}</td>
+                    <td>${escapeHtml(s.description || '')}</td>
+                    <td>${s.ordre}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editSpecialty(${s.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete" onclick="deleteSpecialty(${s.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); }
+    }
+
+    async function deleteSpecialty(id) {
+        if(!confirm('Supprimer cette spécialité ?')) return;
+        try {
+            await fetchAPI(`/specialties/${id}`, { method: 'DELETE' });
+            showSuccess('Spécialité supprimée');
+            loadSpecialties();
+        } catch(err) { alert('Erreur suppression'); }
+    }
+    function editSpecialty(id) { openForm('specialty', id); }
+
+    // ============ ACTUALITÉS ============
+    async function loadActualites() {
+        try {
+            const actualites = await fetchAPI('/actualites');
+            const tbody = document.querySelector('#actualites-table tbody');
+            tbody.innerHTML = actualites.map(a => `
+                <tr>
+                    <td>${escapeHtml(a.titre)}</td>
+                    <td>${escapeHtml(a.description)}</td>
+                    <td>${a.image_url ? `<img src="${escapeHtml(a.image_url)}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">` : 'Aucune'}</td>
+                    <td>${a.ordre}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editActualite(${a.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete" onclick="deleteActualite(${a.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); }
+    }
+
+    async function deleteActualite(id) {
+        if(!confirm('Supprimer cette actualité ?')) return;
+        try {
+            await fetchAPI(`/actualites/${id}`, { method: 'DELETE' });
+            showSuccess('Actualité supprimée');
+            loadActualites();
+        } catch(err) { alert('Erreur suppression'); }
+    }
+    function editActualite(id) { openForm('actualite', id); }
+
+    // ============ MÉDECINS ============
+    async function loadDoctors() {
+        try {
+            const doctors = await fetchAPI('/doctors');
+            const tbody = document.querySelector('#doctors-table tbody');
+            tbody.innerHTML = doctors.map(d => `
+                <tr>
+                    <td>${escapeHtml(d.name)}</td>
+                    <td>${escapeHtml(d.specialty)}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editDoctor(${d.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete" onclick="deleteDoctor(${d.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); }
+    }
+
+    async function deleteDoctor(id) {
+        if(!confirm('Supprimer ce médecin ?')) return;
+        try {
+            await fetchAPI(`/doctors/${id}`, { method: 'DELETE' });
+            showSuccess('Médecin supprimé');
+            loadDoctors();
+        } catch(err) { alert('Erreur suppression'); }
+    }
+    function editDoctor(id) { openForm('doctor', id); }
+
+    // ============ PERSONNEL ============
+    async function loadStaff() {
+        try {
+            const staff = await fetchAPI('/staff');
+            const tbody = document.querySelector('#staff-table tbody');
+            tbody.innerHTML = staff.map(s => `
+                <tr>
+                    <td>${s.photo_url ? `<img src="${escapeHtml(s.photo_url)}" class="staff-photo">` : '<i class="fas fa-user-circle fa-2x" style="color:#0b6e8f"></i>'}</td>
+                    <td>${escapeHtml(s.full_name)}</td>
+                    <td>${escapeHtml(s.profession)}</td>
+                    <td>${escapeHtml(s.specialty || '')}</td>
+                    <td>${escapeHtml(s.department)}</td>
+                    <td>${escapeHtml(s.email)}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editStaff(${s.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete" onclick="deleteStaff(${s.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); }
+    }
+
+    async function deleteStaff(id) {
+        if(!confirm('Supprimer ce personnel ?')) return;
+        try {
+            await fetchAPI(`/staff/${id}`, { method: 'DELETE' });
+            showSuccess('Personnel supprimé');
+            loadStaff();
+        } catch(err) { alert('Erreur suppression'); }
+    }
+    function editStaff(id) { openForm('staff', id); }
 
     // ============ ÉVÉNEMENTS ============
-    function loadEvents() {
-        const db = getDB();
-        const events = db.events || [];
-        const tbody = document.querySelector('#events-table tbody');
-        if (tbody) {
+    async function loadEvents() {
+        try {
+            const events = await fetchAPI('/events');
+            const tbody = document.querySelector('#events-table tbody');
             tbody.innerHTML = events.sort((a,b) => a.ordre - b.ordre).map(e => `
                 <tr>
                     <td class="icon-preview"><i class="${e.icon}" style="color:#2ec4b6; font-size:1.3rem;"></i></td>
@@ -222,185 +269,88 @@
                     </td>
                 </tr>
             `).join('');
-        }
+        } catch(err) { console.error(err); }
     }
 
-    function deleteEvent(id) { 
-        if(confirm('Supprimer cet événement ?')) {
-            const db = getDB();
-            db.events = db.events.filter(e => e.id !== id);
-            saveDB(db);
-            loadEvents();
+    async function deleteEvent(id) {
+        if(!confirm('Supprimer cet événement ?')) return;
+        try {
+            await fetchAPI(`/events/${id}`, { method: 'DELETE' });
             showSuccess('Événement supprimé');
-        }
+            loadEvents();
+        } catch(err) { alert('Erreur suppression'); }
     }
     function editEvent(id) { openForm('event', id); }
 
-    // ============ AUTRES FONCTIONS ============
-    function loadSpecialties() {
-        const db = getDB();
-        const tbody = document.querySelector('#specialties-table tbody');
-        tbody.innerHTML = (db.specialties || []).map(s => `
-            <tr>
-                <td>${escapeHtml(s.name)}</td>
-                <td>${escapeHtml(s.description || '')}</td>
-                <td>${s.ordre}</td>
-                <td><button class="btn-edit" onclick="editSpecialty(${s.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn-delete" onclick="deleteSpecialty(${s.id})"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('');
+    // ============ OFFRES D'EMPLOI ============
+    async function loadJobs() {
+        try {
+            const jobs = await fetchAPI('/admin/jobs');
+            const tbody = document.querySelector('#jobs-table tbody');
+            tbody.innerHTML = jobs.map(j => `
+                <tr>
+                    <td>${escapeHtml(j.title)}</td>
+                    <td>${escapeHtml(j.department)}</td>
+                    <td>${escapeHtml(j.contract_type)}</td>
+                    <td>${escapeHtml(j.location)}</td>
+                    <td>${j.active === 1 ? '✅ Actif' : '❌ Inactif'}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editJob(${j.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete" onclick="deleteJob(${j.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(err) { console.error(err); }
     }
 
-    function deleteSpecialty(id) { 
-        if(confirm('Supprimer ?')) {
-            const db = getDB();
-            db.specialties = db.specialties.filter(s => s.id !== id);
-            saveDB(db);
-            loadSpecialties();
-            showSuccess('Spécialité supprimée');
-        }
-    }
-    function editSpecialty(id) { openForm('specialty', id); }
-
-    function loadActualites() {
-        const db = getDB();
-        const tbody = document.querySelector('#actualites-table tbody');
-        tbody.innerHTML = (db.actualites || []).map(a => `
-            <tr>
-                <td>${escapeHtml(a.titre)}</td>
-                <td>${escapeHtml(a.description)}</td>
-                <td>${a.image_url ? '<img src="'+escapeHtml(a.image_url)+'" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">' : 'Aucune'}</td>
-                <td>${a.ordre}</td>
-                <td><button class="btn-edit" onclick="editActualite(${a.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn-delete" onclick="deleteActualite(${a.id})"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('');
-    }
-
-    function deleteActualite(id) { 
-        if(confirm('Supprimer ?')) {
-            const db = getDB();
-            db.actualites = db.actualites.filter(a => a.id !== id);
-            saveDB(db);
-            loadActualites();
-            showSuccess('Actualité supprimée');
-        }
-    }
-    function editActualite(id) { openForm('actualite', id); }
-
-    function loadDoctors() {
-        const db = getDB();
-        const tbody = document.querySelector('#doctors-table tbody');
-        tbody.innerHTML = (db.doctors || []).map(d => `
-            <tr>
-                <td>${escapeHtml(d.name)}</td>
-                <td>${escapeHtml(d.specialty)}</td>
-                <td><button class="btn-edit" onclick="editDoctor(${d.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn-delete" onclick="deleteDoctor(${d.id})"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('');
-    }
-
-    function deleteDoctor(id) { 
-        if(confirm('Supprimer ?')) {
-            const db = getDB();
-            db.doctors = db.doctors.filter(d => d.id !== id);
-            saveDB(db);
-            loadDoctors();
-            showSuccess('Médecin supprimé');
-        }
-    }
-    function editDoctor(id) { openForm('doctor', id); }
-
-    function loadStaff() {
-        const db = getDB();
-        const tbody = document.querySelector('#staff-table tbody');
-        tbody.innerHTML = (db.staff || []).map(s => `
-            <tr>
-                <td>${s.photo_url ? `<img src="${escapeHtml(s.photo_url)}" class="staff-photo">` : '<i class="fas fa-user-circle fa-2x" style="color:#0b6e8f"></i>'}</td>
-                <td>${escapeHtml(s.full_name)}</td>
-                <td>${escapeHtml(s.profession)}</td>
-                <td>${escapeHtml(s.specialty || '')}</td>
-                <td>${escapeHtml(s.department)}</td>
-                <td>${escapeHtml(s.email)}</td>
-                <td><button class="btn-edit" onclick="editStaff(${s.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn-delete" onclick="deleteStaff(${s.id})"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('');
-    }
-
-    function deleteStaff(id) { 
-        if(confirm('Supprimer ?')) {
-            const db = getDB();
-            db.staff = db.staff.filter(s => s.id !== id);
-            saveDB(db);
-            loadStaff();
-            showSuccess('Personnel supprimé');
-        }
-    }
-    function editStaff(id) { openForm('staff', id); }
-
-    function loadJobs() {
-        const db = getDB();
-        const tbody = document.querySelector('#jobs-table tbody');
-        tbody.innerHTML = (db.jobs || []).map(j => `
-            <tr>
-                <td>${escapeHtml(j.title)}</td>
-                <td>${escapeHtml(j.department)}</td>
-                <td>${escapeHtml(j.contract_type)}</td>
-                <td>${escapeHtml(j.location)}</td>
-                <td>${j.active === 1 ? '✅ Actif' : '❌ Inactif'}</td>
-                <td><button class="btn-edit" onclick="editJob(${j.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn-delete" onclick="deleteJob(${j.id})"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('');
-    }
-
-    function deleteJob(id) { 
-        if(confirm('Supprimer ?')) {
-            const db = getDB();
-            db.jobs = db.jobs.filter(j => j.id !== id);
-            saveDB(db);
-            loadJobs();
+    async function deleteJob(id) {
+        if(!confirm('Supprimer cette offre ?')) return;
+        try {
+            await fetchAPI(`/admin/jobs/${id}`, { method: 'DELETE' });
             showSuccess('Offre supprimée');
-        }
+            loadJobs();
+        } catch(err) { alert('Erreur suppression'); }
     }
     function editJob(id) { openForm('job', id); }
 
-    function loadSiteContent() {
-        const db = getDB();
-        const content = db.siteContent || {};
-        const container = document.getElementById('site-content-form');
-        container.innerHTML = `
-            <div><label>Titre principal :</label><input type="text" id="hero_title" value="${escapeHtml(content.hero_title || '')}" style="width:100%"></div>
-            <div><label>Sous-titre :</label><input type="text" id="hero_subtitle" value="${escapeHtml(content.hero_subtitle || '')}" style="width:100%"></div>
-            <div><label>Description :</label><textarea id="hero_desc" rows="3" style="width:100%">${escapeHtml(content.hero_desc || '')}</textarea></div>
-            <div><label>Stat 1 nombre :</label><input type="text" id="stat1_number" value="${escapeHtml(content.stat1_number || '')}"></div>
-            <div><label>Stat 1 label :</label><input type="text" id="stat1_label" value="${escapeHtml(content.stat1_label || '')}"></div>
-            <div><label>Stat 2 nombre :</label><input type="text" id="stat2_number" value="${escapeHtml(content.stat2_number || '')}"></div>
-            <div><label>Stat 2 label :</label><input type="text" id="stat2_label" value="${escapeHtml(content.stat2_label || '')}"></div>
-            <div><label>Stat 3 nombre :</label><input type="text" id="stat3_number" value="${escapeHtml(content.stat3_number || '')}"></div>
-            <div><label>Stat 3 label :</label><input type="text" id="stat3_label" value="${escapeHtml(content.stat3_label || '')}"></div>
-        `;
+    // ============ CONTENU DU SITE ============
+    async function loadSiteContent() {
+        try {
+            const content = await fetchAPI('/site-content/home');
+            const container = document.getElementById('site-content-form');
+            container.innerHTML = `
+                <div><label>Titre principal :</label><input type="text" id="hero_title" value="${escapeHtml(content.hero_title || '')}" style="width:100%"></div>
+                <div><label>Sous-titre :</label><input type="text" id="hero_subtitle" value="${escapeHtml(content.hero_subtitle || '')}" style="width:100%"></div>
+                <div><label>Description :</label><textarea id="hero_desc" rows="3" style="width:100%">${escapeHtml(content.hero_desc || '')}</textarea></div>
+                <div><label>Stat 1 nombre :</label><input type="text" id="stat1_number" value="${escapeHtml(content.stat1_number || '')}"></div>
+                <div><label>Stat 1 label :</label><input type="text" id="stat1_label" value="${escapeHtml(content.stat1_label || '')}"></div>
+                <div><label>Stat 2 nombre :</label><input type="text" id="stat2_number" value="${escapeHtml(content.stat2_number || '')}"></div>
+                <div><label>Stat 2 label :</label><input type="text" id="stat2_label" value="${escapeHtml(content.stat2_label || '')}"></div>
+                <div><label>Stat 3 nombre :</label><input type="text" id="stat3_number" value="${escapeHtml(content.stat3_number || '')}"></div>
+                <div><label>Stat 3 label :</label><input type="text" id="stat3_label" value="${escapeHtml(content.stat3_label || '')}"></div>
+            `;
+        } catch(err) { console.error(err); }
     }
 
-    function saveSiteContent() {
-        const db = getDB();
-        db.siteContent = {
-            hero_title: document.getElementById('hero_title').value,
-            hero_subtitle: document.getElementById('hero_subtitle').value,
-            hero_desc: document.getElementById('hero_desc').value,
-            stat1_number: document.getElementById('stat1_number').value,
-            stat1_label: document.getElementById('stat1_label').value,
-            stat2_number: document.getElementById('stat2_number').value,
-            stat2_label: document.getElementById('stat2_label').value,
-            stat3_number: document.getElementById('stat3_number').value,
-            stat3_label: document.getElementById('stat3_label').value
+    async function saveSiteContent() {
+        const updates = {
+            hero_title: document.getElementById('hero_title')?.value || '',
+            hero_subtitle: document.getElementById('hero_subtitle')?.value || '',
+            hero_desc: document.getElementById('hero_desc')?.value || '',
+            stat1_number: document.getElementById('stat1_number')?.value || '',
+            stat1_label: document.getElementById('stat1_label')?.value || '',
+            stat2_number: document.getElementById('stat2_number')?.value || '',
+            stat2_label: document.getElementById('stat2_label')?.value || '',
+            stat3_number: document.getElementById('stat3_number')?.value || '',
+            stat3_label: document.getElementById('stat3_label')?.value || ''
         };
-        saveDB(db);
-        showSuccess('Contenu du site mis à jour');
+        try {
+            await fetchAPI('/site-content/home', { method: 'PUT', body: JSON.stringify(updates) });
+            showSuccess('Contenu du site mis à jour');
+        } catch(err) { alert('Erreur sauvegarde'); }
     }
 
+    // ============ FORMULAIRES MODAUX ============
     function openForm(type, id = null) {
         currentType = type;
         currentEditId = id;
@@ -446,7 +396,6 @@
             const iconOptions = availableIcons.map(icon => 
                 `<option value="${icon}">${icon.replace('fas fa-', '')}</option>`
             ).join('');
-            
             fields = `
                 <label>Icône :</label>
                 <select id="icon" required>
@@ -479,6 +428,7 @@
                 <label>Description :</label><textarea id="description" rows="3" required></textarea>
                 <label>Prérequis :</label><textarea id="requirements" rows="3" required></textarea>
                 <label>Salaire :</label><input type="text" id="salary_range">
+                <label>Date limite :</label><input type="date" id="deadline">
                 <label>Actif :</label>
                 <select id="active">
                     <option value="1">✅ Oui (visible)</option>
@@ -520,122 +470,94 @@
         document.getElementById('modalForm').addEventListener('submit', submitForm);
     }
 
-    function loadExistingData(type, id) {
-        const db = getDB();
-        let item = null;
-        if (type === 'specialty') item = db.specialties?.find(s => s.id === id);
-        else if (type === 'actualite') item = db.actualites?.find(a => a.id === id);
-        else if (type === 'doctor') item = db.doctors?.find(d => d.id === id);
-        else if (type === 'staff') item = db.staff?.find(s => s.id === id);
-        else if (type === 'event') item = db.events?.find(e => e.id === id);
-        else if (type === 'job') item = db.jobs?.find(j => j.id === id);
-        
-        if (item) {
-            for (let key in item) {
-                const input = document.getElementById(key);
-                if (input) input.value = item[key];
-            }
-            if (type === 'event' && item.icon) {
-                const iconPreview = document.getElementById('iconPreview');
-                if (iconPreview) {
-                    iconPreview.innerHTML = `<i class="${item.icon}" style="font-size: 24px; color: #2ec4b6;"></i> Aperçu`;
+    async function loadExistingData(type, id) {
+        try {
+            let item = null;
+            if (type === 'specialty') item = await fetchAPI(`/specialties/${id}`);
+            else if (type === 'actualite') item = await fetchAPI(`/actualites/${id}`);
+            else if (type === 'doctor') item = await fetchAPI(`/doctors/${id}`);
+            else if (type === 'staff') item = await fetchAPI(`/staff/${id}`);
+            else if (type === 'event') item = await fetchAPI(`/events/${id}`);
+            else if (type === 'job') item = await fetchAPI(`/admin/jobs/${id}`);
+            
+            if (item) {
+                for (let key in item) {
+                    const input = document.getElementById(key);
+                    if (input) input.value = item[key];
+                }
+                if (type === 'event' && item.icon) {
+                    const iconPreview = document.getElementById('iconPreview');
+                    if (iconPreview) {
+                        iconPreview.innerHTML = `<i class="${item.icon}" style="font-size: 24px; color: #2ec4b6;"></i> Aperçu`;
+                    }
                 }
             }
-        }
+        } catch(err) { console.error(err); }
     }
 
-    function submitForm(e) {
+    async function submitForm(e) {
         e.preventDefault();
-        const db = getDB();
         
         try {
+            let method = 'POST';
+            let endpoint = '';
+            let body = {};
+            
             if (currentType === 'specialty') {
-                const newItem = {
-                    id: currentEditId || getNextId(db, 'specialties'),
+                endpoint = '/specialties';
+                body = {
                     name: document.getElementById('name').value,
                     description: document.getElementById('description').value,
                     ordre: parseInt(document.getElementById('ordre').value) || 0,
                     active: parseInt(document.getElementById('active').value)
                 };
-                if (currentEditId) {
-                    const index = db.specialties.findIndex(s => s.id === currentEditId);
-                    if (index !== -1) db.specialties[index] = newItem;
-                } else {
-                    if (!db.specialties) db.specialties = [];
-                    db.specialties.push(newItem);
-                }
-                
-            } else if (currentType === 'actualite') {
-                const newItem = {
-                    id: currentEditId || getNextId(db, 'actualites'),
+                if (currentEditId) { method = 'PUT'; endpoint = `/specialties/${currentEditId}`; }
+            }
+            else if (currentType === 'actualite') {
+                endpoint = '/actualites';
+                body = {
                     titre: document.getElementById('titre').value,
                     description: document.getElementById('description').value,
-                    image_url: '',
                     ordre: parseInt(document.getElementById('ordre').value) || 0,
                     active: parseInt(document.getElementById('active').value)
                 };
-                if (currentEditId) {
-                    const index = db.actualites.findIndex(a => a.id === currentEditId);
-                    if (index !== -1) db.actualites[index] = newItem;
-                } else {
-                    if (!db.actualites) db.actualites = [];
-                    db.actualites.push(newItem);
-                }
-                
-            } else if (currentType === 'doctor') {
-                const newItem = {
-                    id: currentEditId || getNextId(db, 'doctors'),
+                if (currentEditId) { method = 'PUT'; endpoint = `/actualites/${currentEditId}`; }
+            }
+            else if (currentType === 'doctor') {
+                endpoint = '/doctors';
+                body = {
                     name: document.getElementById('name').value,
                     specialty: document.getElementById('specialty').value
                 };
-                if (currentEditId) {
-                    const index = db.doctors.findIndex(d => d.id === currentEditId);
-                    if (index !== -1) db.doctors[index] = newItem;
-                } else {
-                    if (!db.doctors) db.doctors = [];
-                    db.doctors.push(newItem);
-                }
-                
-            } else if (currentType === 'staff') {
-                const newItem = {
-                    id: currentEditId || getNextId(db, 'staff'),
+                if (currentEditId) { method = 'PUT'; endpoint = `/doctors/${currentEditId}`; }
+            }
+            else if (currentType === 'staff') {
+                endpoint = '/staff';
+                body = {
                     full_name: document.getElementById('full_name').value,
                     profession: document.getElementById('profession').value,
                     specialty: document.getElementById('specialty').value,
                     department: document.getElementById('department').value,
                     email: document.getElementById('email').value,
                     phone: document.getElementById('phone').value,
-                    photo_url: '',
-                    password: document.getElementById('password').value
+                    password: document.getElementById('password').value || '123'
                 };
-                if (currentEditId) {
-                    const index = db.staff.findIndex(s => s.id === currentEditId);
-                    if (index !== -1) db.staff[index] = newItem;
-                } else {
-                    if (!db.staff) db.staff = [];
-                    db.staff.push(newItem);
-                }
-                
-            } else if (currentType === 'event') {
-                const newItem = {
-                    id: currentEditId || getNextId(db, 'events'),
+                if (currentEditId) { method = 'PUT'; endpoint = `/staff/${currentEditId}`; }
+            }
+            else if (currentType === 'event') {
+                endpoint = '/events';
+                body = {
                     icon: document.getElementById('icon').value,
                     title: document.getElementById('title').value,
                     description: document.getElementById('description').value,
                     ordre: parseInt(document.getElementById('ordre').value) || 0,
                     active: parseInt(document.getElementById('active').value)
                 };
-                if (currentEditId) {
-                    const index = db.events.findIndex(e => e.id === currentEditId);
-                    if (index !== -1) db.events[index] = newItem;
-                } else {
-                    if (!db.events) db.events = [];
-                    db.events.push(newItem);
-                }
-                
-            } else if (currentType === 'job') {
-                const newItem = {
-                    id: currentEditId || getNextId(db, 'jobs'),
+                if (currentEditId) { method = 'PUT'; endpoint = `/events/${currentEditId}`; }
+            }
+            else if (currentType === 'job') {
+                endpoint = '/admin/jobs';
+                body = {
                     title: document.getElementById('title').value,
                     department: document.getElementById('department').value,
                     contract_type: document.getElementById('contract_type').value,
@@ -643,28 +565,33 @@
                     description: document.getElementById('description').value,
                     requirements: document.getElementById('requirements').value,
                     salary_range: document.getElementById('salary_range').value,
+                    deadline: document.getElementById('deadline').value,
                     active: parseInt(document.getElementById('active').value)
                 };
-                if (currentEditId) {
-                    const index = db.jobs.findIndex(j => j.id === currentEditId);
-                    if (index !== -1) db.jobs[index] = newItem;
-                } else {
-                    if (!db.jobs) db.jobs = [];
-                    db.jobs.push(newItem);
-                }
+                if (currentEditId) { method = 'PUT'; endpoint = `/admin/jobs/${currentEditId}`; }
             }
             
-            saveDB(db);
+            await fetchAPI(endpoint, { method, body: JSON.stringify(body) });
             showSuccess(currentEditId ? 'Modification enregistrée' : 'Ajout effectué');
             closeModal();
             
             const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
             loadTabData(activeTab);
             
-        } catch (error) {
+        } catch(error) {
             console.error('Erreur:', error);
             alert('Erreur: ' + error.message);
         }
+    }
+
+    function loadTabData(tab) {
+        if (tab === 'specialties') loadSpecialties();
+        else if (tab === 'actualites') loadActualites();
+        else if (tab === 'doctors') loadDoctors();
+        else if (tab === 'staff') loadStaff();
+        else if (tab === 'events') loadEvents();
+        else if (tab === 'jobs') loadJobs();
+        else if (tab === 'site') loadSiteContent();
     }
 
     function closeModal() {
@@ -678,38 +605,35 @@
         return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); 
     }
 
-    // Initialisation - Corriger l'ancienne structure si nécessaire
+    function checkAuth() {
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/admin-login.html';
+            return false;
+        }
+        document.getElementById('adminName').innerText = 'Administrateur';
+        return true;
+    }
+
+    function logout() {
+        localStorage.removeItem('adminToken');
+        window.location.href = '/';
+    }
+
+    // Gestion des onglets
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tabId = btn.dataset.tab;
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            loadTabData(tabId);
+        });
+    });
+
+    // Initialisation
     if (checkAuth()) {
-        let db = getDB();
-        // Vérifier et corriger la structure
-        let needSave = false;
-        if (!db.events) {
-            db.events = [
-                { id: 1, icon: "fas fa-syringe", title: "Campagne vaccination", description: "grippe saisonnière – à partir du 15 octobre", ordre: 1, active: 1 },
-                { id: 2, icon: "fas fa-heartbeat", title: "Dépistage gratuit", description: "hypertension & diabète – tous les mercredis", ordre: 2, active: 1 },
-                { id: 3, icon: "fas fa-chalkboard-user", title: "Atelier 'Mieux vivre'", description: "gestion du stress & alimentation – samedi 20 mai", ordre: 3, active: 1 },
-                { id: 4, icon: "fas fa-laptop-medical", title: "Téléconsultation 24/7", description: "prise de RDV en ligne immédiate", ordre: 4, active: 1 }
-            ];
-            needSave = true;
-        }
-        if (!db.specialties) { db.specialties = []; needSave = true; }
-        if (!db.actualites) { db.actualites = []; needSave = true; }
-        if (!db.doctors) { db.doctors = []; needSave = true; }
-        if (!db.staff) { db.staff = []; needSave = true; }
-        if (!db.jobs) { db.jobs = []; needSave = true; }
-        if (!db.siteContent) {
-            db.siteContent = {
-                hero_title: "Bienvenue au Medical Center Elizabeth (MCE)",
-                hero_subtitle: "Soins d'excellence",
-                hero_desc: "Blocs opératoires robotisés...",
-                stat1_number: "98%", stat1_label: "Satisfaction patient",
-                stat2_number: "24/7", stat2_label: "Urgences & téléconsultation",
-                stat3_number: "+150", stat3_label: "Spécialistes"
-            };
-            needSave = true;
-        }
-        
-        if (needSave) saveDB(db);
         loadSpecialties();
     }
 </script>

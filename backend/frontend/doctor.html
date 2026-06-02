@@ -239,7 +239,7 @@
             <div style="overflow-x: auto;">
                 <table id="appointmentsTable">
                     <thead><tr><th>ID</th><th>Patient</th><th>Email</th><th>Téléphone</th><th>Date</th><th>Créneau</th><th>Spécialité</th><th>Message</th><th>Visio</th><th>Vu admin</th><th>Vu moi</th><th>Action</th></tr></thead>
-                    <tbody id="tableBody"><tr><td colspan="12">Chargement...</td></tr></tbody>
+                    <tbody id="tableBody"><tr><td colspan="12">Chargement...‹/td›‹/tr›</tbody>
                 </table>
             </div>
 
@@ -281,7 +281,7 @@
             <div style="overflow-x: auto;">
                 <table id="myAvailTable">
                     <thead><tr><th>Date</th><th>Créneau</th><th>Statut</th><th>Action</th></tr></thead>
-                    <tbody id="availTableBody"> hilab<td colspan="4">Chargement...</td></tr></tbody>
+                    <tbody id="availTableBody"><tr><td colspan="4">Chargement...‹/td›‹/tr›</tbody>
                 </table>
             </div>
 
@@ -320,6 +320,9 @@
 </div>
 
 <script>
+    // ========== CONFIGURATION API ==========
+    const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
+    
     let authToken = localStorage.getItem('doctorToken');
     let currentDoctor = null;
     const loginSection = document.getElementById('loginSection');
@@ -375,12 +378,10 @@
     photoUploadInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
-        // Vérifier que c'est une image
         if (!file.type.startsWith('image/')) {
             alert('Veuillez sélectionner une image (JPEG, PNG, GIF, WEBP)');
             return;
         }
-        // Limiter la taille à 2 Mo
         if (file.size > 2 * 1024 * 1024) {
             alert('L\'image ne doit pas dépasser 2 Mo');
             return;
@@ -388,17 +389,12 @@
         const reader = new FileReader();
         reader.onload = function(ev) {
             const base64 = ev.target.result;
-            // Afficher la photo
             doctorPhoto.src = base64;
-            // Stocker dans localStorage
             localStorage.setItem('doctorPhoto_' + (currentDoctor?.id || 'default'), base64);
-            // Optionnel : mettre à jour l'objet currentDoctor
             if (currentDoctor) {
                 currentDoctor.photo_url = base64;
                 localStorage.setItem('doctorInfo', JSON.stringify(currentDoctor));
             }
-            // Optionnel : envoyer au backend via API (si souhaité)
-            // uploadPhotoToServer(base64);
         };
         reader.readAsDataURL(file);
     });
@@ -409,7 +405,7 @@
         if (!email || !password) { loginError.innerText = 'Veuillez remplir tous les champs'; return; }
         loginError.innerText = '';
         try {
-            const res = await fetch('/api/doctor/login', {
+            const res = await fetch(`${API_BASE}/doctor/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -455,12 +451,10 @@
         if (stored) currentDoctor = JSON.parse(stored);
         if (currentDoctor) {
             doctorNameSpan.innerText = `Dr. ${currentDoctor.name} (${currentDoctor.specialty || 'Médecin'})`;
-            // Charger la photo depuis localStorage ou depuis l'API
             const savedPhoto = localStorage.getItem('doctorPhoto_' + currentDoctor.id);
             if (savedPhoto) {
                 doctorPhoto.src = savedPhoto;
             } else {
-                // Fallback: avatar avec initiales
                 doctorPhoto.src = currentDoctor.photo_url || `https://ui-avatars.com/api/?background=0b6e8f&color=fff&rounded=true&size=70&bold=true&name=${encodeURIComponent(currentDoctor.name.charAt(0))}`;
             }
         }
@@ -469,9 +463,9 @@
     // ========== RENDEZ-VOUS ==========
     async function fetchAppointments(silent = false) {
         if (!authToken) return;
-        if (!silent) tableBody.innerHTML = '<tr><td colspan="12">Chargement...</td></tr>';
+        if (!silent) tableBody.innerHTML = '<tr><td colspan="12">Chargement...‹/td›‹/tr›';
         try {
-            const res = await fetch('/api/doctor/appointments', {
+            const res = await fetch(`${API_BASE}/doctor/appointments`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             if (res.status === 401 || res.status === 403) { doLogout(); return; }
@@ -481,21 +475,26 @@
             updateStats(appointments);
             return appointments;
         } catch(err) {
-            if (!silent) tableBody.innerHTML = '<tr><td colspan="12">Erreur de chargement</td></tr>';
+            if (!silent) tableBody.innerHTML = '<tr><td colspan="12">Erreur de chargement‹/td›‹/tr›';
             return [];
         }
     }
 
     function renderAppointments(appointments) {
         if (!appointments.length) {
-            tableBody.innerHTML = '<tr><td colspan="12">Aucun rendez-vous</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="12">Aucun rendez-vous‹/td›‹/tr›';
             return;
         }
         tableBody.innerHTML = appointments.map(rdv => `
             <tr>
-                <td>${rdv.id}</td><td>${escapeHtml(rdv.fullname)}</td><td>${escapeHtml(rdv.email)}</td>
-                <td>${escapeHtml(rdv.phone || '-')}</td><td>${rdv.date}</td><td>${rdv.time}</td>
-                <td>${escapeHtml(rdv.specialty || '-')}</td><td>${escapeHtml(rdv.message || '-')}</td>
+                <td>${rdv.id}</td>
+                <td>${escapeHtml(rdv.fullname)}</td>
+                <td>${escapeHtml(rdv.email)}</td>
+                <td>${escapeHtml(rdv.phone || '-')}</td>
+                <td>${rdv.date}</td>
+                <td>${rdv.time}</td>
+                <td>${escapeHtml(rdv.specialty || '-')}</td>
+                <td>${escapeHtml(rdv.message || '-')}</td>
                 <td>${rdv.teleconsultation_link ? `<a href="${rdv.teleconsultation_link}" target="_blank" class="teleconsult-link">🎥 Rejoindre</a>` : '—'}</td>
                 <td class="badge ${rdv.admin_viewed ? 'badge-success' : 'badge-secondary'}">${rdv.admin_viewed ? '✅ Vu' : '⏳ En attente'}</td>
                 <td class="badge ${rdv.doctor_viewed ? 'badge-success' : 'badge-secondary'}">${rdv.doctor_viewed ? '✅ Vu' : '⏳ Non vu'}</td>
@@ -517,7 +516,7 @@
     window.markAsViewed = async function(id) {
         if (!authToken) return;
         try {
-            const res = await fetch(`/api/doctor/appointments/${id}/view`, {
+            const res = await fetch(`${API_BASE}/doctor/appointments/${id}/view`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
@@ -532,21 +531,25 @@
     async function loadMyAvailabilities() {
         if (!currentDoctor) return;
         try {
-            const res = await fetch('/api/availabilities/calendar');
+            const res = await fetch(`${API_BASE}/availabilities/calendar`);
             const all = await res.json();
             const myAvail = all.filter(a => a.doctor_id == currentDoctor.id);
-            if (!myAvail.length) { availTableBody.innerHTML = '<tr><td colspan="4">Aucun créneau</td></tr>'; return; }
+            if (!myAvail.length) { availTableBody.innerHTML = '<tr><td colspan="4">Aucun créneau‹/td›‹/tr›'; return; }
             availTableBody.innerHTML = myAvail.map(av => `
-                <tr><td>${av.date}</td><td>${av.time_slot}</td><td>${av.is_booked ? '🔴 Réservé' : '🟢 Libre'}</td>
-                <td>${!av.is_booked ? `<button onclick="deleteAvailability(${av.id})" style="background:#dc3545; color:white; border:none; border-radius:20px; padding:4px 12px;">🗑️ Supprimer</button>` : '—'}</td></tr>
+                <tr>
+                    <td>${av.date}</td>
+                    <td>${av.time_slot}</td>
+                    <td>${av.is_booked ? '🔴 Réservé' : '🟢 Libre'}</td>
+                    <td>${!av.is_booked ? `<button onclick="deleteAvailability(${av.id})" style="background:#dc3545; color:white; border:none; border-radius:20px; padding:4px 12px;">🗑️ Supprimer</button>` : '—'}</td>
+                </tr>
             `).join('');
-        } catch(err) { availTableBody.innerHTML = '<tr><td colspan="4">Erreur de chargement</td></tr>'; }
+        } catch(err) { availTableBody.innerHTML = '<tr><td colspan="4">Erreur de chargement‹/td›‹/tr›'; }
     }
 
     window.deleteAvailability = async function(id) {
         if (!confirm("Supprimer ce créneau (s’il n’est pas réservé) ?")) return;
         try {
-            const res = await fetch(`/api/availabilities/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${API_BASE}/availabilities/${id}`, { method: 'DELETE' });
             if (res.ok) loadMyAvailabilities();
             else alert("Impossible de supprimer (peut-être réservé)");
         } catch(err) { alert("Erreur réseau"); }
@@ -598,7 +601,7 @@
         for (const date of dates) {
             for (const slot of slots) {
                 try {
-                    const res = await fetch('/api/availabilities', {
+                    const res = await fetch(`${API_BASE}/availabilities`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ doctor_id, date, time_slot: slot })
@@ -619,7 +622,7 @@
     // ========== MESSAGERIE ==========
     async function loadPatientsList() {
         try {
-            const res = await fetch('/api/patients', {
+            const res = await fetch(`${API_BASE}/patients`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             if (res.status === 401) return;
@@ -633,7 +636,7 @@
     async function loadMessages() {
         if (!currentDoctor) return;
         try {
-            const res = await fetch(`/api/messages/staff/${currentDoctor.id}`, {
+            const res = await fetch(`${API_BASE}/messages/staff/${currentDoctor.id}`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             if (res.status === 401) { doLogout(); return; }
@@ -676,7 +679,7 @@
 
         messages.forEach(msg => {
             if (msg.is_read === 0 && msg.receiver_type === 'staff') {
-                fetch(`/api/messages/${msg.id}/read`, {
+                fetch(`${API_BASE}/messages/${msg.id}/read`, {
                     method: 'PUT',
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 }).catch(console.error);
@@ -700,7 +703,7 @@
             return;
         }
         try {
-            const res = await fetch(`/api/messages/${msgId}/reply`, {
+            const res = await fetch(`${API_BASE}/messages/${msgId}/reply`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -749,7 +752,7 @@
             reply_to_id: null
         };
         try {
-            const res = await fetch('/api/messages', {
+            const res = await fetch(`${API_BASE}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -776,7 +779,7 @@
             const appointments = await fetchAppointments(true);
             const unviewedAppointments = appointments.filter(apt => !apt.doctor_viewed);
             
-            const messagesRes = await fetch(`/api/messages/staff/${currentDoctor.id}`, {
+            const messagesRes = await fetch(`${API_BASE}/messages/staff/${currentDoctor.id}`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             let unreadMessages = [];

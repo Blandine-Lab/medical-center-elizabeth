@@ -122,6 +122,9 @@
 </div>
 
 <script>
+    // ========== CONFIGURATION API ==========
+    const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
+    
     const modal = document.getElementById('modal');
     const closeBtn = document.querySelector('.close');
     const feedbackDiv = document.getElementById('feedback');
@@ -144,7 +147,7 @@
 
     async function loadJobs() {
         try {
-            const res = await fetch('/api/jobs');
+            const res = await fetch(`${API_BASE}/jobs`);
             if (!res.ok) throw new Error('Erreur réseau');
             const jobs = await res.json();
             const container = document.getElementById('jobsList');
@@ -207,13 +210,15 @@
         submitBtn.disabled = true;
 
         try {
+            // Upload CV
             const formData = new FormData();
             formData.append('cv', cvFile);
-            const uploadRes = await fetch('/api/upload/cv', { method: 'POST', body: formData });
+            const uploadRes = await fetch(`${API_BASE}/upload/cv`, { method: 'POST', body: formData });
             const uploadData = await uploadRes.json();
             if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload échoué');
 
-            const appRes = await fetch('/api/applications', {
+            // Envoi candidature
+            const appRes = await fetch(`${API_BASE}/applications`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

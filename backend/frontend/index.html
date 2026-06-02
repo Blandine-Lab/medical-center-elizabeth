@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* ========== STYLES EXISTANTS (conservés) ========== */
+    /* ========== TOUS VOS STYLES EXISTANTS (conservez-les) ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background-color: #fbfdff; color: #1a2c3e; scroll-behavior: smooth; }
     :root { --primary: #0b6e8f; --primary-dark: #07506b; --secondary: #2ec4b6; --accent: #ff9f1c; --light-bg: #f0f7fc; --gray-light: #eef2f6; --gray-mid: #cbd5e1; --text-dark: #0f2b3d; --shadow-sm: 0 10px 25px -5px rgba(0,0,0,0.05); --shadow-md: 0 20px 25px -12px rgba(0,0,0,0.08); --radius-card: 1.5rem; --transition: all 0.3s ease; }
@@ -154,69 +154,23 @@
       font-style: italic;
     }
     
-    /* ---------- NOUVEAU : EFFET DYNAMIQUE "OMBRAGE QUI BOUGE" ---------- */
-    /* Animation d'ombre portée : elle se renforce, s'adoucit et se déplace latéralement */
+    /* Animation d'ombre */
     @keyframes ombreDynamique {
-      0% {
-        box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(46, 196, 182, 0);
-      }
-      25% {
-        box-shadow: 5px 12px 22px -6px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(46, 196, 182, 0.2);
-      }
-      50% {
-        box-shadow: 0 18px 28px -5px rgba(0, 0, 0, 0.3), 0 0 0 5px rgba(46, 196, 182, 0.25);
-      }
-      75% {
-        box-shadow: -5px 12px 22px -6px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(46, 196, 182, 0.2);
-      }
-      100% {
-        box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(46, 196, 182, 0);
-      }
+      0% { box-shadow: 0 10px 20px -8px rgba(0,0,0,0.15), 0 0 0 0 rgba(46,196,182,0); }
+      25% { box-shadow: 5px 12px 22px -6px rgba(0,0,0,0.25), 0 0 0 2px rgba(46,196,182,0.2); }
+      50% { box-shadow: 0 18px 28px -5px rgba(0,0,0,0.3), 0 0 0 5px rgba(46,196,182,0.25); }
+      75% { box-shadow: -5px 12px 22px -6px rgba(0,0,0,0.25), 0 0 0 2px rgba(46,196,182,0.2); }
+      100% { box-shadow: 0 10px 20px -8px rgba(0,0,0,0.15), 0 0 0 0 rgba(46,196,182,0); }
     }
-
-    /* Application de l'animation à TOUS les blocs visés */
-    .service-card,
-    .doctor-card,
-    .news-item,
-    .etablissement-card,
-    .partenaire-card,
-    .info-card,
-    .appointment-form,
-    .hero-visual,
-    .quick-link,
-    .stat-item,
-    .service-card,
-    .doctor-card,
-    .etablissement-card,
-    .partenaire-card,
-    .hero-visual,
-    .appointment-form,
-    .info-card {
+    .service-card, .doctor-card, .news-item, .etablissement-card, .partenaire-card, .info-card, .appointment-form, .hero-visual, .quick-link, .stat-item {
       animation: ombreDynamique 3.2s ease-in-out infinite;
       will-change: box-shadow;
       transition: transform 0.2s, border-color 0.2s;
     }
-    
-    /* Légère amélioration : au survol, l'animation s'accélère un peu pour rendre l'expérience plus vivante */
-    .service-card:hover,
-    .doctor-card:hover,
-    .news-item:hover,
-    .etablissement-card:hover,
-    .partenaire-card:hover,
-    .info-card:hover,
-    .hero-visual:hover,
-    .quick-link:hover {
+    .service-card:hover, .doctor-card:hover, .news-item:hover, .etablissement-card:hover, .partenaire-card:hover, .info-card:hover, .hero-visual:hover, .quick-link:hover {
       animation-duration: 1.8s;
       transform: translateY(-4px);
     }
-    
-    /* Éviter que l'animation ne ralentisse le rendu sur les éléments statiques */
-    .hero-visual {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(2px);
-    }
-
-    /* Footer et autres contenus (pas d'animation sur tous pour rester élégant) */
     
     @media (max-width: 768px) {
       .news-item { flex-direction: column; text-align: center; }
@@ -224,7 +178,6 @@
       .etablissement-card img { height: 160px; }
     }
     
-    /* Footer dynamique (styles conservés) */
     footer { background: #061e28; color: #cfdfe9; padding: 3rem 0 1.5rem; margin-top: 2rem; }
     .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
     .footer-col h4 { color: white; margin-bottom: 1.2rem; font-size: 1.1rem; }
@@ -249,10 +202,7 @@
       z-index: 1000;
       transition: all 0.3s ease;
     }
-    .floating-chat:hover {
-      transform: scale(1.1);
-      background: linear-gradient(145deg, #2ec4b6, #0b6e8f);
-    }
+    .floating-chat:hover { transform: scale(1.1); background: linear-gradient(145deg, #2ec4b6, #0b6e8f); }
     .floating-chat .chat-tooltip {
       position: absolute;
       right: 70px;
@@ -266,9 +216,7 @@
       pointer-events: none;
       transition: opacity 0.2s;
     }
-    .floating-chat:hover .chat-tooltip {
-      opacity: 1;
-    }
+    .floating-chat:hover .chat-tooltip { opacity: 1; }
     
     .chat-modal {
       display: none;
@@ -324,7 +272,6 @@
     .job-link { background: #2ec4b6; color: white !important; padding: 0.3rem 0.8rem; border-radius: 20px; }
     .job-link:hover { background: #0b6e8f; color: white !important; }
     
-    /* Responsive */
     @media (max-width: 900px) {
       .nav-links { display: none; flex-direction: column; width: 100%; background: white; padding: 1.5rem; border-radius: 1.5rem; margin-top: 1rem; gap: 1.2rem; }
       .nav-links.active { display: flex; }
@@ -340,15 +287,8 @@
       .hero { min-height: 500px; }
       .chat-modal { width: 300px; right: 10px; bottom: 80px; }
     }
-
-    /* Styles pour les cartes info et modales */
-    .info-card {
-      transition: var(--transition);
-      cursor: pointer;
-    }
-    .info-card:hover {
-      transform: translateY(-5px);
-    }
+    .info-card { transition: var(--transition); cursor: pointer; }
+    .info-card:hover { transform: translateY(-5px); }
     .modal {
       display: none;
       position: fixed;
@@ -361,9 +301,7 @@
       justify-content: center;
       align-items: center;
     }
-    .modal.active {
-      display: flex;
-    }
+    .modal.active { display: flex; }
     .modal-content {
       background: white;
       max-width: 800px;
@@ -384,11 +322,7 @@
       color: #666;
       transition: 0.2s;
     }
-    .close-modal:hover {
-      color: #000;
-    }
-
-    /* Fond d'écran pour la section médecins (sans transparence) */
+    .close-modal:hover { color: #000; }
     #doctors {
       background-image: url('/uploads/MCE.jpg'), url('/uploads/MCE.png');
       background-size: cover;
@@ -396,12 +330,8 @@
       background-repeat: no-repeat;
       background-color: #f0f7fc;
     }
-    #doctors .doctor-card {
-      background: white;
-      backdrop-filter: none;
-    }
-    #doctors .section-title,
-    #doctors .section-sub {
+    #doctors .doctor-card { background: white; backdrop-filter: none; }
+    #doctors .section-title, #doctors .section-sub {
       color: #062c3b;
       text-shadow: none;
       background-color: rgba(255,255,255,0.6);
@@ -413,39 +343,13 @@
       width: fit-content;
       backdrop-filter: none;
     }
-    #doctors .section-sub {
-      background-color: rgba(255,255,255,0.5);
-    }
-
-    /* Réorganisation paiement : deux colonnes */
-    .payment-layout {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      align-items: stretch;
-    }
-    .payment-left {
-      flex: 1;
-      min-width: 250px;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    .payment-right {
-      flex: 1.5;
-      min-width: 280px;
-      background: white;
-      border-radius: 1.5rem;
-      padding: 2rem;
-      box-shadow: var(--shadow-sm);
-    }
+    #doctors .section-sub { background-color: rgba(255,255,255,0.5); }
+    .payment-layout { display: flex; flex-wrap: wrap; gap: 2rem; align-items: stretch; }
+    .payment-left { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 1.5rem; }
+    .payment-right { flex: 1.5; min-width: 280px; background: white; border-radius: 1.5rem; padding: 2rem; box-shadow: var(--shadow-sm); }
     @media (max-width: 768px) {
-      .payment-layout {
-        flex-direction: column;
-      }
-      .payment-left, .payment-right {
-        width: 100%;
-      }
+      .payment-layout { flex-direction: column; }
+      .payment-left, .payment-right { width: 100%; }
     }
   </style>
 </head>
@@ -560,7 +464,7 @@
   </div>
 </section>
 
-<!-- Médecins (avec fond image MCE sans transparence) -->
+<!-- Médecins -->
 <section id="doctors">
   <div class="container">
     <h2 class="section-title">Corps médical d'excellence MCE</h2>
@@ -569,7 +473,7 @@
   </div>
 </section>
 
-<!-- Actualités (API) -->
+<!-- Actualités -->
 <section style="padding: 3rem 0; background: #f9fcfd;">
   <div class="container">
     <h2 class="section-title" style="text-align: left;">📰 Actualités & communiqués MCE</h2>
@@ -607,7 +511,7 @@
   </div>
 </section>
 
-<!-- Rendez-vous (formulaire dynamique) -->
+<!-- Rendez-vous -->
 <section id="appointment">
   <div class="container">
     <h2 class="section-title">Prenez rendez-vous au MCE en un clic</h2>
@@ -634,14 +538,12 @@
   </div>
 </section>
 
-<!-- Section Paiement en ligne : nouvelle mise en page avec cartes à gauche, formulaire à droite -->
+<!-- Paiement -->
 <section style="padding: 4rem 0; background: url('/payer.jpg') center/cover no-repeat; position: relative;">
   <div class="container" style="position: relative; z-index: 2;">
     <h2 class="section-title">💳 Payer des soins hospitaliers</h2>
     <p class="section-sub">Réglez vos prestations en ligne par Mobile Money ou Carte bancaire</p>
-    
     <div class="payment-layout">
-      <!-- PARTIE GAUCHE : les deux cartes (Comprendre les frais / Payer une facture) -->
       <div class="payment-left">
         <div class="info-card" id="openTarifsBtn" style="background: white; border-radius: 1rem; padding: 1.5rem; cursor: pointer; box-shadow: var(--shadow-sm);">
           <i class="fas fa-file-invoice-dollar" style="font-size: 2rem; color: var(--primary);"></i>
@@ -656,8 +558,6 @@
           <span class="btn-secondary" style="display: inline-block; margin-top: 0.5rem;">En savoir plus →</span>
         </div>
       </div>
-
-      <!-- PARTIE DROITE : formulaire de paiement + coordonnées bancaires -->
       <div class="payment-right">
         <div id="paymentConfig" style="margin-bottom: 1rem; font-size:0.9rem; background:#f0f7fc; border-radius:0.8rem; padding:0.5rem;"></div>
         <form id="paymentForm">
@@ -683,7 +583,7 @@
   </div>
 </section>
 
-<!-- ========== NOUS SOUTENIR ========== -->
+<!-- NOUS SOUTENIR -->
 <section style="background: url('/uploads/soutenir.jpg') center/cover no-repeat; padding: 5rem 0; position: relative; cursor: pointer;" onclick="window.location.href='/support.html'">
   <div class="container" style="text-align: center; background: rgba(0,0,0,0.65); color: white; border-radius: 2rem; padding: 3rem 2rem; backdrop-filter: blur(2px);">
     <i class="fas fa-heart" style="font-size: 3rem; color: #ff9f1c; margin-bottom: 1rem; display: inline-block;"></i>
@@ -713,7 +613,7 @@
   </div>
 </div>
 
-<!-- Footer dynamique -->
+<!-- Footer -->
 <footer id="contact">
   <div class="container footer-grid" id="footerContainer">
     <p>Chargement des informations...</p>
@@ -721,12 +621,11 @@
   <div class="copyright" id="copyrightContainer"></div>
 </footer>
 
-<!-- Bouton flottant + Modale de chat -->
+<!-- Chat -->
 <div class="floating-chat" id="chatBtn">
   <i class="fas fa-comment-dots"></i>
   <span class="chat-tooltip">Chat en direct</span>
 </div>
-
 <div class="chat-modal" id="chatModal">
   <div class="chat-header">
     <h3>💬 Envoyez-nous un message</h3>
@@ -745,13 +644,16 @@
 </div>
 
 <script>
+  // ========== CONFIGURATION API ==========
+  const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
+  
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
 
   // ========== TARIFS ==========
   async function loadTarifsContent() {
     const container = document.getElementById('tarifsContent');
     try {
-      const res = await fetch('/api/tarifs');
+      const res = await fetch(`${API_BASE}/tarifs`);
       if (!res.ok) throw new Error();
       const tarifs = await res.json();
       const actifs = tarifs.filter(t => t.active === 1).sort((a,b) => a.ordre - b.ordre);
@@ -766,8 +668,8 @@
       });
       let html = '<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse;">';
       for (const [service, items] of Object.entries(grouped)) {
-        html += `<thead><tr style="background:#0b6e8f; color:white;"><th colspan="3">${escapeHtml(service)}</th></tr>
-                 <tr style="background:#eef2f6;"><th>Prestation</th><th>Prix</th><th>Description</th></tr></thead><tbody>`;
+        html += `<thead><tr style="background:#0b6e8f; color:white;"><th colspan="3">${escapeHtml(service)}</th>比
+                 <tr style="background:#eef2f6;"><th>Prestation</th><th>Prix</th><th>Description</th>比</thead><tbody>`;
         items.forEach(item => {
           html += `<tr>
                     <td style="border-bottom:1px solid #ddd; padding:8px;">${escapeHtml(item.prestation)}</td>
@@ -790,7 +692,7 @@
     const container = document.getElementById('actualitesContainer');
     if (!container) return;
     try {
-      const res = await fetch('/api/actualites');
+      const res = await fetch(`${API_BASE}/actualites`);
       if (!res.ok) throw new Error();
       const actualites = await res.json();
       if (!actualites.length) { container.innerHTML = '<p>Aucune actualité.</p>'; return; }
@@ -809,7 +711,7 @@
     const container = document.getElementById('doctorsContainer');
     if (!container) return;
     try {
-      const res = await fetch('/api/staff');
+      const res = await fetch(`${API_BASE}/staff`);
       if (!res.ok) throw new Error();
       const staff = await res.json();
       if (!staff.length) { container.innerHTML = '<p>Aucun membre du personnel.</p>'; return; }
@@ -824,20 +726,12 @@
     } catch(err) { container.innerHTML = '<p>Erreur chargement médecins.</p>'; }
   }
 
-  // ========== CRÉNEAUX ==========
-  function loadSlots(doctorId, date) {
-    const timeSelect = document.getElementById('timeSelect');
-    if (!doctorId || !date) { timeSelect.innerHTML = '<option>Sélectionnez médecin et date</option>'; return; }
-    const slots = ['09:00','10:00','11:00','14:00','15:00','16:00'];
-    timeSelect.innerHTML = slots.map(s => `<option value="${s}">${s}</option>`).join('');
-  }
-
   // ========== ÉVÉNEMENTS ==========
   async function loadEvents() {
     const container = document.getElementById('eventsList');
     if (!container) return;
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`${API_BASE}/events`);
       if (!res.ok) throw new Error();
       const events = await res.json();
       const activeEvents = events.filter(e => e.active === 1);
@@ -862,7 +756,7 @@
     const container = document.getElementById('etablissementContainer');
     if (!container) return;
     try {
-      const res = await fetch('/api/etablissement');
+      const res = await fetch(`${API_BASE}/etablissement`);
       if (!res.ok) throw new Error();
       const photos = await res.json();
       const activePhotos = photos.filter(p => p.active === 1).sort((a,b) => a.ordre - b.ordre);
@@ -890,7 +784,7 @@
     const container = document.getElementById('partenairesContainer');
     if (!container) return;
     try {
-      const res = await fetch('/api/partenaires');
+      const res = await fetch(`${API_BASE}/partenaires`);
       if (!res.ok) throw new Error();
       const partenaires = await res.json();
       const activePartenaires = partenaires.filter(p => p.active === 1).sort((a,b) => a.ordre - b.ordre);
@@ -915,7 +809,7 @@
   // ========== FOOTER ==========
   async function loadFooter() {
     try {
-      const res = await fetch('/api/site-content/footer');
+      const res = await fetch(`${API_BASE}/site-content/footer`);
       const data = await res.json();
       const technologies = (data.technologies || '').split('\n').filter(t => t.trim()).map(t => `<li>${escapeHtml(t.trim())}</li>`).join('');
       const liens = (data.liens || '').split('\n').filter(l => l.trim()).map(ligne => {
@@ -957,7 +851,7 @@
     const select = document.getElementById('specialty');
     if (!select) return;
     try {
-      const res = await fetch('/api/specialties');
+      const res = await fetch(`${API_BASE}/specialties`);
       const specialties = await res.json();
       const activeSpecialties = specialties.filter(s => s.active === 1);
       if (activeSpecialties.length === 0) {
@@ -982,7 +876,7 @@
 
   async function loadPaymentConfig() {
     try {
-      const res = await fetch('/api/paiement/config');
+      const res = await fetch(`${API_BASE}/paiement/config`);
       const config = await res.json();
       const container = document.getElementById('paymentConfig');
       if (container) {
@@ -1009,7 +903,7 @@
 
     feedback.innerHTML = '<span style="color:blue;">Initialisation du paiement...</span>';
     try {
-      const res = await fetch('/api/paiement/initier', {
+      const res = await fetch(`${API_BASE}/paiement/initier`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ montant, methode, telephone, email, nom })
@@ -1019,7 +913,7 @@
         feedback.innerHTML = `<span style="color:green;">✅ Paiement initié. Code de confirmation : <strong>${data.code}</strong><br>Veuillez confirmer le paiement (simulation).</span>`;
         const confirmer = confirm(`Confirmer le paiement avec le code ${data.code} ? (Simulation)`);
         if (confirmer) {
-          const confirmRes = await fetch(`/api/paiement/confirmer/${data.id}`, {
+          const confirmRes = await fetch(`${API_BASE}/paiement/confirmer/${data.id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code: data.code })
@@ -1048,7 +942,7 @@
   async function loadPaiementFactureContent() {
     const container = document.getElementById('paiementFactureContent');
     try {
-      const res = await fetch('/api/site-content/paiement_facture');
+      const res = await fetch(`${API_BASE}/site-content/paiement_facture`);
       const data = await res.json();
       container.innerHTML = data.contenu || '<p>Pour payer votre facture, utilisez le formulaire ci-dessus ou contactez notre service financier.</p>';
     } catch(err) {
@@ -1088,8 +982,7 @@
 
   // ========== FORMULAIRE RDV DYNAMIQUE ==========
   (function() {
-    // Charger la liste des médecins (table staff, profession Médecin)
-    fetch('/api/staff')
+    fetch(`${API_BASE}/staff`)
         .then(r => r.json())
         .then(staff => {
             const medecins = staff.filter(m => m.profession === 'Médecin');
@@ -1102,7 +995,6 @@
         })
         .catch(err => console.error('Erreur chargement médecins :', err));
 
-    // Fonction pour charger les créneaux disponibles
     function loadSlots() {
         const doctorId = document.getElementById('doctorSelect')?.value;
         const date = document.getElementById('dateInput')?.value;
@@ -1111,7 +1003,7 @@
             if (timeSelect) timeSelect.innerHTML = '<option>Sélectionnez médecin et date</option>';
             return;
         }
-        fetch(`/api/availability/${doctorId}/${date}`)
+        fetch(`${API_BASE}/availability/${doctorId}/${date}`)
             .then(r => r.json())
             .then(slots => {
                 if (timeSelect) {
@@ -1130,7 +1022,6 @@
     if (doctorSelect) doctorSelect.addEventListener('change', loadSlots);
     if (dateInput) dateInput.addEventListener('change', loadSlots);
 
-    // Soumission du formulaire
     const form = document.getElementById('appointmentForm');
     if (form) {
         form.addEventListener('submit', async (e) => {
@@ -1149,7 +1040,7 @@
             const feedbackDiv = document.getElementById('formFeedback');
             feedbackDiv.innerHTML = '<span style="color:blue;">Envoi en cours...</span>';
             try {
-                const res = await fetch('/api/appointments', {
+                const res = await fetch(`${API_BASE}/appointments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -1158,7 +1049,6 @@
                 if (res.ok) {
                     feedbackDiv.innerHTML = '<span style="color:green;">✅ Rendez-vous enregistré avec succès !</span>';
                     form.reset();
-                    // Réinitialiser les listes déroulantes
                     const timeSelect = document.getElementById('timeSelect');
                     if (timeSelect) timeSelect.innerHTML = '<option>Sélectionnez médecin et date</option>';
                     setTimeout(() => feedbackDiv.innerHTML = '', 5000);
@@ -1183,7 +1073,7 @@
       return;
     }
     try {
-      const res = await fetch('/api/newsletter/subscribe', {
+      const res = await fetch(`${API_BASE}/newsletter/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -1220,7 +1110,7 @@
       return;
     }
     try {
-      const res = await fetch('/api/messages', {
+      const res = await fetch(`${API_BASE}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1268,7 +1158,6 @@
 
   // ========== CHARGEMENT INITIAL ==========
   loadDoctors();
-
   loadActualitesFront();
   loadEvents();
   loadEtablissement();

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nexus Santé | Nous soutenir</title>
+  <title>Medical Center Elizabeth | Nous soutenir</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -11,14 +11,14 @@
     body { font-family: 'Inter', sans-serif; background-color: #fbfdff; color: #1a2c3e; scroll-behavior: smooth; }
     :root { --primary: #0b6e8f; --primary-dark: #07506b; --secondary: #2ec4b6; --accent: #ff9f1c; --light-bg: #f0f7fc; --gray-light: #eef2f6; --shadow-sm: 0 10px 25px -5px rgba(0,0,0,0.05); --shadow-md: 0 20px 25px -12px rgba(0,0,0,0.08); --radius-card: 1.5rem; --transition: all 0.3s ease; }
     .container { max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
-    /* Top bar & navbar (identique à l'accueil) */
+    /* Top bar & navbar */
     .top-bar { background: #061e28; color: white; padding: 0.5rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
     .top-bar a { color: white; text-decoration: none; font-size: 0.85rem; }
     .navbar { position: sticky; top: 0; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); box-shadow: 0 1px 2px rgba(0,0,0,0.03); z-index: 1000; padding: 1rem 0; }
     .nav-container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
     .logo h1 { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); background-clip: text; -webkit-background-clip: text; color: transparent; }
     .logo span { font-size: 0.8rem; font-weight: 500; color: var(--primary-dark); }
-    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links { display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; }
     .nav-links a { font-weight: 500; transition: var(--transition); color: #1f3b4c; text-decoration: none; }
     .nav-links a:hover { color: var(--primary); }
     .btn-outline-light { background: transparent; border: 1.5px solid var(--primary); padding: 0.5rem 1.2rem; border-radius: 2rem; color: var(--primary); font-weight: 600; }
@@ -58,10 +58,10 @@
 <!-- Top bar -->
 <div class="top-bar">
     <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-        <a href="/"><i class="fas fa-user"></i> Portail patient</a>
-        <a href="/"><i class="fas fa-language"></i> English version</a>
+        <a href="/espace-patient.html"><i class="fas fa-user"></i> Portail patient</a>
+        <a href="#"><i class="fas fa-language"></i> English version</a>
         <a href="/support.html" style="color: var(--secondary);"><i class="fas fa-heart"></i> Je fais un don</a>
-        <a href="/"><i class="fas fa-stethoscope"></i> Trouver un médecin</a>
+        <a href="/search-staff.html"><i class="fas fa-stethoscope"></i> Trouver un médecin</a>
     </div>
     <div style="font-size: 0.75rem;"><i class="fas fa-phone-alt"></i> Urgences 24/7 : +33 (0)1 88 88 88 88</div>
 </div>
@@ -69,26 +69,29 @@
 <!-- Navbar -->
 <nav class="navbar">
   <div class="container nav-container">
-    <div class="logo"><a href="/" style="text-decoration: none;"><h1>NEXUS Santé <i class="fas fa-heartbeat"></i></h1><span>Hôpital 5.0 · Soins augmentés</span></a></div>
+    <div class="logo"><a href="/" style="text-decoration: none;"><h1>Medical Center Elizabeth <i class="fas fa-heartbeat"></i></h1><span>MCE · Soins d'excellence</span></a></div>
     <div class="menu-icon" id="menuToggle"><i class="fas fa-bars"></i></div>
     <div class="nav-links" id="navLinks">
       <a href="/">Accueil</a>
       <a href="/#services">Services</a>
       <a href="/#doctors">Médecins</a>
       <a href="/#appointment">Rendez-vous</a>
-      <a href="/#contact">Contact</a>
-      <a href="#" class="btn-outline-light">Espace Patient</a>
+      <a href="jobs.html">💼 Offres d'emploi</a>
+      <a href="#contact">Contact</a>
+      <a href="/espace-patient.html" class="btn-outline-light">Espace Patient</a>
     </div>
   </div>
 </nav>
 
 <!-- Secondary navigation -->
 <div class="secondary-nav">
-    <a href="/">Informations patients & visiteurs</a>
-    <a href="/">Nos spécialités</a>
-    <a href="/">Check-up Center</a>
+    <a href="/info-patients.html">Informations patients & visiteurs</a>
+    <a href="/specialties.html">Nos spécialités</a>
+    <a href="/checkup.html">Check-up Center</a>
     <a href="/about.html">Nous connaître</a>
     <a href="/support.html" style="color: var(--secondary); font-weight: bold;">Nous soutenir</a>
+    <a href="/jobs.html" style="color: #2ec4b6; font-weight: bold;">💼 Offres d'emploi</a>
+    <a href="/search-staff.html" style="color: #2ec4b6; font-weight: bold;">👨‍⚕️ Trouver un professionnel</a>
 </div>
 
 <!-- En-tête -->
@@ -123,7 +126,7 @@
             </div>
         </div>
 
-        <!-- Formulaire de don -->
+        <!-- Formulaire de don avec API paiement -->
         <div id="don" class="don-form">
             <h3><i class="fas fa-credit-card"></i> Formulaire de don en ligne</h3>
             <form id="donForm">
@@ -156,46 +159,118 @@
 <!-- Footer -->
 <footer>
   <div class="container footer-grid">
-    <div class="footer-col"><h4>NEXUS Santé</h4><p><i class="fas fa-map-marker-alt"></i> 33 Avenue de l'Innovation, Paris 75012</p><p><i class="fas fa-phone-alt"></i> +33 (0)1 88 88 88 88</p><p><i class="fas fa-clock"></i> Urgences 24/7 - Accès permanent</p></div>
+    <div class="footer-col"><h4>Medical Center Elizabeth</h4><p><i class="fas fa-map-marker-alt"></i> 33 Avenue de l'Innovation, Paris 75012</p><p><i class="fas fa-phone-alt"></i> +33 (0)1 88 88 88 88</p><p><i class="fas fa-clock"></i> Urgences 24/7 - Accès permanent</p></div>
     <div class="footer-col"><h4>Dernières technologies</h4><ul style="list-style: none;"><li>▪ IRM 7T & Photon-counting</li><li>▪ Salle hybride connectée</li><li>▪ Exosquelettes rééducation</li><li>▪ Télémédecine immersive</li></ul></div>
-    <div class="footer-col"><h4>Liens utiles</h4><p><a href="#">Espace patient sécurisé</a></p><p><a href="#">Avis et références</a></p><p><a href="#">Recrutement medical</a></p></div>
+    <div class="footer-col"><h4>Liens utiles</h4><p><a href="/espace-patient.html">Espace patient sécurisé</a></p><p><a href="#">Avis et références</a></p><p><a href="/jobs.html">Recrutement medical</a></p></div>
     <div class="footer-col"><h4>Suivez-nous</h4><div style="display:flex; gap:1rem; font-size:1.5rem;"><i class="fab fa-twitter"></i><i class="fab fa-linkedin"></i><i class="fab fa-instagram"></i></div></div>
   </div>
-  <div class="copyright"><p>© 2026 Nexus Santé — Hôpital de dernière génération. Soins augmentés, éthique et excellence.</p></div>
+  <div class="copyright"><p>© 2026 Medical Center Elizabeth — Soins d'excellence, éthique et innovations médicales.</p></div>
 </footer>
 
 <script>
-  // Menu mobile
-  const toggle = document.getElementById('menuToggle');
-  const links = document.getElementById('navLinks');
-  if(toggle) toggle.onclick = () => links.classList.toggle('active');
+    // ========== CONFIGURATION API ==========
+    const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
 
-  // Gestion du montant personnalisé
-  const montantSelect = document.getElementById('donMontant');
-  const autreInput = document.getElementById('donAutre');
-  if(montantSelect) {
-    montantSelect.addEventListener('change', () => {
-      autreInput.style.display = montantSelect.value === 'autre' ? 'block' : 'none';
-    });
-  }
+    // Menu mobile
+    const toggle = document.getElementById('menuToggle');
+    const links = document.getElementById('navLinks');
+    if(toggle) toggle.onclick = () => links.classList.toggle('active');
 
-  // Soumission du don (simulation)
-  const donForm = document.getElementById('donForm');
-  const donFeedback = document.getElementById('donFeedback');
-  if(donForm) {
-    donForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const nom = document.getElementById('donNom').value;
-      const email = document.getElementById('donEmail').value;
-      let montant = montantSelect.value;
-      if(montant === 'autre') montant = document.getElementById('donAutre').value;
-      if(!montant || montant <= 0) montant = '??';
-      donFeedback.innerHTML = `<span style="color:green;">✅ Merci ${nom} pour votre don de ${montant} €. Un email de confirmation vous sera envoyé à ${email}.</span>`;
-      donForm.reset();
-      autreInput.style.display = 'none';
-      setTimeout(() => donFeedback.innerHTML = '', 5000);
-    });
-  }
+    // Gestion du montant personnalisé
+    const montantSelect = document.getElementById('donMontant');
+    const autreInput = document.getElementById('donAutre');
+    if(montantSelect) {
+        montantSelect.addEventListener('change', () => {
+            autreInput.style.display = montantSelect.value === 'autre' ? 'block' : 'none';
+        });
+    }
+
+    // Soumission du don via l'API paiement
+    const donForm = document.getElementById('donForm');
+    const donFeedback = document.getElementById('donFeedback');
+
+    if(donForm) {
+        donForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nom = document.getElementById('donNom').value;
+            const email = document.getElementById('donEmail').value;
+            const telephone = document.getElementById('donTel').value;
+            
+            let montant = montantSelect.value;
+            if(montant === 'autre') {
+                montant = document.getElementById('donAutre').value;
+            }
+            
+            if(!montant || parseFloat(montant) <= 0) {
+                donFeedback.innerHTML = '<span style="color:red;">Veuillez saisir un montant valide</span>';
+                return;
+            }
+            
+            // Désactiver le bouton pendant l'envoi
+            const submitBtn = donForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Traitement en cours...';
+            donFeedback.innerHTML = '<span style="color:blue;">Initialisation du paiement...</span>';
+            
+            try {
+                // Appel à l'API d'initiation de paiement
+                const res = await fetch(`${API_BASE}/paiement/initier`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        montant: parseFloat(montant),
+                        methode: 'carte',
+                        telephone: telephone,
+                        email: email,
+                        nom: nom
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if(res.ok) {
+                    donFeedback.innerHTML = `<span style="color:green;">✅ Paiement initié ! Code de confirmation : <strong>${data.code}</strong><br>Veuillez confirmer le paiement (simulation).</span>`;
+                    
+                    // Simulation de confirmation
+                    const confirmer = confirm(`Confirmer le don de ${montant}€ avec le code ${data.code} ? (Simulation)`);
+                    if(confirmer) {
+                        const confirmRes = await fetch(`${API_BASE}/paiement/confirmer/${data.id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code: data.code })
+                        });
+                        const confirmData = await confirmRes.json();
+                        
+                        if(confirmRes.ok) {
+                            donFeedback.innerHTML = `<span style="color:green;">✅ Merci ${nom} pour votre don de ${montant} € !<br>
+                                <a href="${confirmData.facture_url}" target="_blank">📄 Télécharger votre reçu fiscal</a><br>
+                                Un email de confirmation a été envoyé à ${email}.</span>`;
+                            donForm.reset();
+                            autreInput.style.display = 'none';
+                        } else {
+                            donFeedback.innerHTML = `<span style="color:red;">❌ Erreur lors de la confirmation : ${confirmData.error}</span>`;
+                        }
+                    } else {
+                        donFeedback.innerHTML = '<span style="color:orange;">Paiement annulé.</span>';
+                    }
+                } else {
+                    donFeedback.innerHTML = `<span style="color:red;">❌ ${data.error || 'Erreur lors de l\'initialisation du paiement'}</span>`;
+                }
+            } catch(err) {
+                console.error(err);
+                donFeedback.innerHTML = '<span style="color:red;">❌ Erreur réseau. Veuillez réessayer.</span>';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Faire un don sécurisé';
+                setTimeout(() => {
+                    if(donFeedback.innerHTML.includes('Merci') || donFeedback.innerHTML.includes('Erreur')) {
+                        setTimeout(() => donFeedback.innerHTML = '', 8000);
+                    }
+                }, 5000);
+            }
+        });
+    }
 </script>
 </body>
 </html>

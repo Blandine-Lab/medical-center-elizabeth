@@ -93,6 +93,9 @@
 </div>
 
 <script>
+    // ========== CONFIGURATION API ==========
+    const API_BASE = 'https://mce-backend-fgpg.onrender.com/api';
+    
     let token = localStorage.getItem('patientToken');
     const authPanel = document.getElementById('authPanel');
     const dashboardPanel = document.getElementById('dashboardPanel');
@@ -116,7 +119,7 @@
     }
 
     async function fetchWithAuth(url, options = {}) {
-        const res = await fetch(url, {
+        const res = await fetch(`${API_BASE}${url}`, {
             ...options,
             headers: { 'Authorization': `Bearer ${token}`, ...options.headers }
         });
@@ -128,9 +131,9 @@
     async function loadAppointments() {
         const container = document.getElementById('appointmentsList');
         try {
-            const apps = await fetchWithAuth('/api/patient/appointments');
+            const apps = await fetchWithAuth('/patient/appointments');
             if (!apps.length) { container.innerHTML = '<p>Aucun rendez-vous.</p>'; return; }
-            container.innerHTML = `<table><thead><tr><th>Date</th><th>Horaire</th><th>Médecin</th><th>Spécialité</th><th>Téléconsultation</th><tr></thead><tbody>
+            container.innerHTML = `<table><thead><tr><th>Date</th><th>Horaire</th><th>Médecin</th><th>Spécialité</th><th>Téléconsultation</th></tr></thead><tbody>
                 ${apps.map(a => `<tr><td>${a.date}</td><td>${a.time}</td><td>${escapeHtml(a.doctor_name || 'N/A')}</td><td>${escapeHtml(a.specialty || '-')}</td><td>${a.teleconsultation_link ? `<a href="${a.teleconsultation_link}" target="_blank" class="teleconsult-link">🎥 Rejoindre</a>` : 'Présentiel'}</td></tr>`).join('')}
             </tbody></table>`;
         } catch(err) { container.innerHTML = '<p>Erreur chargement.</p>'; }
@@ -139,10 +142,10 @@
     async function loadResults() {
         const container = document.getElementById('resultsList');
         try {
-            const results = await fetchWithAuth('/api/patient/results');
+            const results = await fetchWithAuth('/patient/results');
             if (!results.length) { container.innerHTML = '<p>Aucun résultat publié.</p>'; return; }
-            container.innerHTML = `<table><thead><tr><th>Type</th><th>Description</th><th>Disponible le</th><th>Document</th></tr></thead><tbody>
-                ${results.map(r => `<tr><td>${escapeHtml(r.type)}</td><td>${escapeHtml(r.description)}</td><td>${new Date(r.published_at).toLocaleDateString()}</td><td class="result-file"><a href="${r.file_url}" target="_blank">📄 Télécharger</a></td></tr>`).join('')}
+            container.innerHTML = `</table><thead><tr><th>Type</th><th>Description</th><th>Disponible le</th><th>Document</th></tr></thead><tbody>
+                ${results.map(r => `<tr><td>${escapeHtml(r.type)}</td><td>${escapeHtml(r.description)}</td><td>${new Date(r.published_at).toLocaleDateString()}</td><td class="result-file"><a href="${r.file_url}" target="_blank">📄 Télécharger</a></td></td>`).join('')}
             </tbody></table>`;
         } catch(err) { container.innerHTML = '<p>Erreur chargement.</p>'; }
     }
@@ -156,7 +159,7 @@
         const feedback = document.getElementById('loginFeedback');
         feedback.innerHTML = '<span style="color:blue;">Connexion...</span>';
         try {
-            const res = await fetch('/api/patient/login', {
+            const res = await fetch(`${API_BASE}/patient/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -182,7 +185,7 @@
         const feedback = document.getElementById('registerFeedback');
         feedback.innerHTML = '<span style="color:blue;">Création du compte...</span>';
         try {
-            const res = await fetch('/api/patient/register', {
+            const res = await fetch(`${API_BASE}/patient/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ first_name, last_name, email, password, phone })
